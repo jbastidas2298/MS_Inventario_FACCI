@@ -1,0 +1,29 @@
+server:
+  port: 8099
+
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=configuracion_facci_service;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: Alt!ora2015
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  security:
+    user:
+      name: administrador
+      password: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
+logging:
+  level:
+    root: INFO
+    com.facci: DEBUG
+    org.springframework.security: DEBUG
+  file:
+    name: configuracion-service/logs/configuracion-service.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+jwt:
+  secret: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
+  expiration: 86400000

@@ -1,0 +1,3 @@
+include 'inventario-service'
+include 'configuracion-service'
+rootProject.name = 'MS_Inventario_FACCI'

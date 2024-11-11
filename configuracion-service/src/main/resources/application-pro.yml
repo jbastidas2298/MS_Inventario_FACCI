@@ -1,0 +1,21 @@
+server:
+  port: 8099
+
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=configuracion_facci_service;encrypt=true;trustServerCertificate=true
+    username: sa
+    password: Alt!ora2015
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+logging:
+  level:
+    root: INFO
+    com.facci: DEBUG
+  file:
+    name: configuracion-service/logs/configuracion-service.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
