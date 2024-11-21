@@ -14,7 +14,7 @@ spring:
   security:
     user:
       name: administrador
-      password: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
+      password: $2a$10$MKYSgq0NHY9AU94jtJqi1evjmZoO7BEVECA4jrgJ52bHaMXh7Dhpu
 logging:
   level:
     root: INFO

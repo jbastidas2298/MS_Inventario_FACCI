@@ -2,11 +2,14 @@ package com.facci.configuracion.seguridad;
 
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -29,7 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             return User.builder()
                     .username(adminUsername)
                     .password(adminPassword)
-                    .roles("ADMIN")
+                    .roles("ADMINISTRADOR")
                     .build();
         }
 
@@ -37,7 +40,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .map(user -> User.builder()
                         .username(user.getNombreUsuario())
                         .password(user.getContrasena())
-                        .roles("USER")
+                        .authorities(Collections.singletonList(
+                                new SimpleGrantedAuthority(user.getRolUsuario().name())
+                        ))
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }

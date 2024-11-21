@@ -19,3 +19,5 @@ logging:
     name: configuracion-service/logs/configuracion-service.log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+gateway:
+  api-key: "$2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy"

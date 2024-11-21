@@ -8,9 +8,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 public class SeguridadControlador {
@@ -25,7 +28,7 @@ public class SeguridadControlador {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    @RequestMapping(value="/login" , method = RequestMethod.POST)
+    @RequestMapping(value="/configuracion/login" , method = RequestMethod.POST)
     public ResponseEntity<String> login(@RequestBody Map<String, String> loginRequest) {
         try {
             String username = loginRequest.get("username");
@@ -33,7 +36,11 @@ public class SeguridadControlador {
 
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password));
-            String token = jwtTokenProvider.createToken(username);
+            List<String> roles = authentication.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList());
+            String token = jwtTokenProvider.createToken(username,roles);
             return ResponseEntity.ok(token);
 
         } catch (AuthenticationException e) {

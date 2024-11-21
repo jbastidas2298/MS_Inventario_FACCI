@@ -1,0 +1,38 @@
+server:
+  port: 8097
+spring:
+  cloud:
+    config:
+      enabled: ena  # Desactiva el uso de Spring Cloud Config
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+            allowedHeaders:
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+      routes:
+        - id: configuracion-service
+          uri: http://localhost:8099
+          predicates:
+            - Path=/configuracion/**
+        - id: inventario-service
+          uri: http://localhost:8098
+          predicates:
+            - Path=/inventario/**
+logging:
+  level:
+    root: INFO
+    com.facci: DEBUG
+    org.springframework.security: DEBUG
+  file:
+    name: /var/logs/gateway-service.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+jwt:
+  secret: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
+  expiration: 86400000

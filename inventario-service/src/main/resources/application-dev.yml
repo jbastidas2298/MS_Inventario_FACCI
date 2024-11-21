@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=inventario_facci_service;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=facci_inventario;encrypt=true;trustServerCertificate=true
     username: sa
     password: Alt!ora2015
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -15,7 +15,11 @@ logging:
   level:
     root: INFO
     com.facci: DEBUG
+    org.springframework.security: DEBUG
   file:
     name: /var/logs/inventario-service.log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+jwt:
+  secret: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
+  expiration: 86400000
