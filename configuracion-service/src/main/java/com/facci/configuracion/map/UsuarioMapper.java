@@ -1,5 +1,6 @@
 package com.facci.configuracion.map;
 
+import com.facci.configuracion.dominio.RolUsuario;
 import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.UsuarioDTO;
 import org.springframework.stereotype.Service;
@@ -16,8 +17,9 @@ public class UsuarioMapper {
                 .nombreCompleto(valor.getNombreCompleto())
                 .correo(valor.getCorreo())
                 .activo(valor.isActivo())
-                //.contrasena(valor.getContrasena())
-                .rolUsuario(valor.getRolUsuario())
+                .roles(valor.getRoles().stream()
+                        .map(RolUsuario::getRolUsuario)
+                        .collect(Collectors.toList()))
                 .build();
     }
 

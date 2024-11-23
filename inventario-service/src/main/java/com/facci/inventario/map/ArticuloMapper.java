@@ -18,9 +18,9 @@ public class ArticuloMapper {
         return Articulo.builder()
                 .nombre(dto.getNombre())
                 .descripcion(dto.getDescripcion())
-                .codigo(dto.getCodigo())
+                .codigoOrigen(dto.getCodigoOrigen())
+                .codigoInterno(dto.getCodigoInterno())
                 .marca(dto.getMarca())
-                .tipo(dto.getTipo())
                 .estado(dto.getEstado())
                 .observacion(dto.getObservacion())
                 .build();
@@ -38,9 +38,9 @@ public class ArticuloMapper {
                 .id(articulo.getId())
                 .nombre(articulo.getNombre())
                 .descripcion(articulo.getDescripcion())
-                .codigo(articulo.getCodigo())
+                .codigoOrigen(articulo.getCodigoOrigen())
+                .codigoInterno(articulo.getCodigoInterno())
                 .marca(articulo.getMarca())
-                .tipo(articulo.getTipo())
                 .estado(articulo.getEstado())
                 .observacion(articulo.getObservacion())
                 .build();

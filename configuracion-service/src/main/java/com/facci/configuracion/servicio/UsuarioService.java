@@ -1,9 +1,10 @@
 package com.facci.configuracion.servicio;
 
+import com.facci.configuracion.dominio.RolUsuario;
 import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.UsuarioDTO;
-import com.facci.configuracion.handler.NotFoundUserException;
-import com.facci.configuracion.handler.UserAlreadyExistsException;
+import com.facci.configuracion.enums.EnumErrores;
+import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.map.UsuarioMapper;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,8 @@ public class UsuarioService {
         var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(usuarioDTO.getNombreUsuario());
         if (usuarioOp.isPresent()) {
             log.error("Ya se encuentra registrado el usuario: {}", usuarioDTO.getNombreUsuario());
-            throw new UserAlreadyExistsException();
+            throw new CustomException(EnumErrores.USUARIO_YA_EXISTE);
+
         }
         String encryptedPassword = passwordEncoder.encode(usuarioDTO.getContrasena());
         usuarioDTO.setContrasena(encryptedPassword);
@@ -50,28 +52,39 @@ public class UsuarioService {
 
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
+        // Buscar el usuario en la base de datos
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
 
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + usuarioDto.getId();
             log.error(mensajeError);
-            throw new NotFoundUserException();
+            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
         }
 
         var usuarioRecargado = usuarioOp.get();
+
         try {
+            // Actualizar datos básicos del usuario
             usuarioRecargado.setActivo(usuarioDto.isActivo());
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
-            usuarioRecargado.setRolUsuario(usuarioDto.getRolUsuario());
-            log.info("Usuario modificado: {}", usuarioRecargado);
-            return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioRecargado));
+
+            usuarioRecargado.getRoles().clear();
+            List<RolUsuario> nuevosRoles = usuarioDto.getRoles().stream()
+                    .map(rolEnum -> new RolUsuario(rolEnum, usuarioRecargado))
+                    .collect(Collectors.toList());
+            usuarioRecargado.getRoles().addAll(nuevosRoles);
+            Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
+
+            log.info("Usuario modificado: {}", usuarioActualizado.getNombreUsuario());
+            return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioActualizado));
         } catch (Exception e) {
             String mensajeError = "Error al actualizar el usuario: " + usuarioRecargado.getNombreUsuario();
             log.error(mensajeError, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mensajeError);
         }
     }
+
 
     @Transactional
     public ResponseEntity<?> eliminar(Long id) {
@@ -80,7 +93,7 @@ public class UsuarioService {
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + id;
             log.error(mensajeError);
-            throw new NotFoundUserException();
+            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
         }
         try {
             usuarioRepositorio.delete(usuarioOp.get());

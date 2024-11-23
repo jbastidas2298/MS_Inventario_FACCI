@@ -15,13 +15,13 @@ import lombok.*;
 @AllArgsConstructor
 public class Articulo extends EntidadBase {
 
-    private String codigo;
+    private String codigoOrigen;
+
+    private String codigoInterno;
 
     private String nombre;
 
     private String descripcion;
-
-    private String tipo;
 
     private String marca;
 
@@ -30,21 +30,21 @@ public class Articulo extends EntidadBase {
     @Enumerated(EnumType.STRING)
     private EstadoArticulo estado;
 
-    public Articulo(String codigo, String nombre, String descripcion, String tipo, String marca, String modelo, String serialNumero,String observacion) {
-        this.codigo = codigo;
+    public Articulo(String codigoOrigen,String codigoInterno, String nombre, String descripcion, String marca, String observacion) {
+        this.codigoOrigen = codigoOrigen;
+        this.codigoInterno = codigoInterno;
         this.nombre = nombre;
         this.descripcion = descripcion;
-        this.tipo = tipo;
         this.marca = marca;
         this.estado = EstadoArticulo.DISPONIBLE;
         this.observacion = observacion;
     }
 
     public Articulo(ArticuloDTO articuloDTO) {
-        this.codigo = articuloDTO.getCodigo();
+        this.codigoOrigen = articuloDTO.getCodigoOrigen();
+        this.codigoInterno = articuloDTO.getCodigoInterno();
         this.nombre = articuloDTO.getNombre();
         this.descripcion = articuloDTO.getDescripcion();
-        this.tipo = articuloDTO.getTipo();
         this.marca = articuloDTO.getMarca();
         this.estado = articuloDTO.getEstado();
         this.observacion = articuloDTO.getObservacion();

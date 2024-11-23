@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ArticuloDTO {
     private long id;
-    private String codigo;
+    private String codigoOrigen;
+    private String codigoInterno;
     private String nombre;
     private String descripcion;
-    private String tipo;
     private String marca;
     private EstadoArticulo estado;
     private String observacion;

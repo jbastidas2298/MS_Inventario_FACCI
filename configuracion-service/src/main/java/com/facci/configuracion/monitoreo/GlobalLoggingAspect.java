@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -11,14 +12,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class GlobalLoggingAspect {
 
-    @Before("execution(* com.facci.configuracion..*(..))")
+    @Pointcut("within(@org.springframework.stereotype.Service *)")
+    public void serviceMethods() {}
+
+    @Before("serviceMethods()")
     public void logBeforeMethod(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().toShortString();
-        log.debug("Ejecutando el Método: {}", methodName);
-    }
-    @Before("execution(* com.facci.configuracion..*(..))")
-    public void logAfterMethod(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().toShortString();
-        log.debug("Saliendo del Método: {}", methodName);
+        log.debug("Ejecutando el Método en Servicio: {}", methodName);
     }
 }

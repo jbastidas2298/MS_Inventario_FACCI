@@ -15,22 +15,15 @@ public class RestTemplateConfig {
     public RestTemplate restTemplate() {
         RestTemplate restTemplate = new RestTemplate();
 
-        // Crear un interceptor para agregar encabezados personalizados
         ClientHttpRequestInterceptor interceptor = (request, body, execution) -> {
             request.getHeaders().add("X-API-KEY", "$2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy");
             return execution.execute(request, body);
         };
 
-        // Agregar el interceptor a la lista de interceptores del RestTemplate
         List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>(restTemplate.getInterceptors());
         interceptors.add(interceptor);
         restTemplate.setInterceptors(interceptors);
 
         return restTemplate;
     }
-
-    ClientHttpRequestInterceptor interceptor = (request, body, execution) -> {
-        request.getHeaders().add("X-API-KEY", "$2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy");
-        return execution.execute(request, body);
-    };
 }
