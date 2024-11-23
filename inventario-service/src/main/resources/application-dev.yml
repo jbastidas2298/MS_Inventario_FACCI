@@ -15,7 +15,6 @@ logging:
   level:
     root: INFO
     com.facci: DEBUG
-    org.springframework.security: DEBUG
   file:
     name: /var/logs/inventario-service.log
   pattern:
@@ -23,3 +22,6 @@ logging:
 jwt:
   secret: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
   expiration: 86400000
+
+articulo:
+  carpeta-imagenes: C:/imagenes/

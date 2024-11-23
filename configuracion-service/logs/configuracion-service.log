@@ -5205,3 +5205,26 @@ com.microsoft.sqlserver.jdbc.SQLServerException: Violation of UNIQUE KEY constra
 2024-11-22 19:36:43 - Saliendo del Método: UsuarioMapper.mapToDto(..)
 2024-11-22 19:36:43 - Ejecutando el Método: UsuarioMapper.mapToDto(..)
 2024-11-22 19:36:43 - Usuarios consultados: 2
+2024-11-22 21:15:59 - Securing POST /configuracion/login
+2024-11-22 21:15:59 - Set SecurityContextHolder to anonymous SecurityContext
+2024-11-22 21:15:59 - Secured POST /configuracion/login
+2024-11-22 21:15:59 - Saliendo del Método: SeguridadControlador.login(..)
+2024-11-22 21:15:59 - Ejecutando el Método: SeguridadControlador.login(..)
+2024-11-22 21:15:59 - Saliendo del Método: CustomUserDetailsService.loadUserByUsername(..)
+2024-11-22 21:15:59 - Ejecutando el Método: CustomUserDetailsService.loadUserByUsername(..)
+2024-11-22 21:16:00 - Authenticated user
+2024-11-22 21:16:00 - Saliendo del Método: JwtTokenProvider.createToken(..)
+2024-11-22 21:16:00 - Ejecutando el Método: JwtTokenProvider.createToken(..)
+2024-11-22 22:41:39 - Securing POST /configuracion/login
+2024-11-22 22:41:39 - Set SecurityContextHolder to anonymous SecurityContext
+2024-11-22 22:41:39 - Secured POST /configuracion/login
+2024-11-22 22:41:39 - Saliendo del Método: SeguridadControlador.login(..)
+2024-11-22 22:41:39 - Ejecutando el Método: SeguridadControlador.login(..)
+2024-11-22 22:41:39 - Saliendo del Método: CustomUserDetailsService.loadUserByUsername(..)
+2024-11-22 22:41:39 - Ejecutando el Método: CustomUserDetailsService.loadUserByUsername(..)
+2024-11-22 22:41:39 - Authenticated user
+2024-11-22 22:41:39 - Saliendo del Método: JwtTokenProvider.createToken(..)
+2024-11-22 22:41:39 - Ejecutando el Método: JwtTokenProvider.createToken(..)
+2024-11-22 23:01:15 - Closing JPA EntityManagerFactory for persistence unit 'default'
+2024-11-22 23:01:15 - HikariPool-1 - Shutdown initiated...
+2024-11-22 23:01:15 - HikariPool-1 - Shutdown completed.

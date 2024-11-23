@@ -8,7 +8,6 @@ import com.facci.inventario.map.ArticuloMapper;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,7 +31,8 @@ public class ArticuloService {
     public ArticuloDTO registrar(ArticuloDTO dto) {
         Optional<Articulo> articuloExistente = articuloRepositorio.findByCodigoOrigen(dto.getCodigoOrigen());
         if (articuloExistente.isPresent()) {
-            log.error("El artículo con código de origen '{}' ya existe.", dto.getCodigoOrigen());
+            log.error("El artí" +
+                    "culo con código de origen '{}' ya existe.", dto.getCodigoOrigen());
             throw new CustomException(EnumErrores.ARTICULO_YA_EXISTE);
         }
         String secuencial = secuencialService.generarSecuencial("Articulo");
@@ -77,4 +77,5 @@ public class ArticuloService {
                 .map(articuloMapper::mapToDto)
                 .collect(Collectors.toList());
     }
+
 }
