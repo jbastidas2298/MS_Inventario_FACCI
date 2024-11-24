@@ -1,9 +1,8 @@
 package com.facci.inventario.dominio;
 
+import com.facci.inventario.enums.TipoRelacion;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -11,7 +10,9 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UsuarioArticulo extends EntidadBase {
+@Getter
+@Setter
+public class ArticuloAsignacion extends EntidadBase {
 
     @Column(nullable = false)
     private Long idUsuario;
@@ -20,4 +21,8 @@ public class UsuarioArticulo extends EntidadBase {
     private Articulo articulo;
 
     private LocalDateTime fechaAsignacion;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    TipoRelacion tipoRelacion;
 }

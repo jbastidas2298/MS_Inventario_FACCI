@@ -49,11 +49,4 @@ public class UsuarioControlador {
     public ResponseEntity<UsuarioDTO> consultarUsuario(@PathVariable Long id) {
         return usuarioService.consultarUsuario(id);
     }
-
-
-/*    @GetMapping("/nombreUsuario/{nombreUsuario}")
-    public ResponseEntity<UsuarioDTO> buscarPorNombreUsuario(@PathVariable("nombreUsuario") String nombreUsuario) {
-        var usuario = servicio.listarPorNombreUsuario(nombreUsuario);
-        return ResponseEntity.ok(usuario);
-    }*/
 }

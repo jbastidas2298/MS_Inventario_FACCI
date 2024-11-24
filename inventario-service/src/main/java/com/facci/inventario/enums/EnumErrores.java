@@ -14,8 +14,14 @@ public enum EnumErrores {
     ARCHIVO_NO_VALIDO("EI011", "El archivo proporcionado no es válido."),
     IMAGEN_ARCHIVO_VACIO("EI012", "Archivo vacio."),
     ARCHIVO_NO_ENCONTRADO("EI013", "Archivo vacio."),
-    PATH_INVALIDO("EI014", "Ruta Invalidad");
-
+    PATH_INVALIDO("EI014", "Ruta Invalidad"),
+    ASIGNACIONES_NO_ENCONTRADAS("EI015","No se encontraron artículos asignados al usuario actual."),
+    USUARIO_ASIGNAR_EN_SESION("EI016","El usuario en sesion no es valido par Asignarse Articulos."),
+    CODIGO_BARRAS_GENERAR("EI017","Error al generar codigo de barras"),
+    REPORTE_NO_ENCONTRADO("EI018","EL reporte no fue encontrado"),
+    REPORTE_ERROR_GENERAR("EI019","Error al generar el reporte"),
+    ARTICULO_ASIGNADO_NO_ELIMINABLE("EI020","Articulo Asigando no es posible eliminar"),
+    ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF");
 
 
     private final String codigo;

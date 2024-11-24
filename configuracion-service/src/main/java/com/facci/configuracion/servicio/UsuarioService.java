@@ -142,4 +142,13 @@ public class UsuarioService {
         return ResponseEntity.ok(usuariosDto);
     }
 
+    @Transactional(readOnly = true)
+    public UsuarioDTO listarPorNombreUsuario(String nombreUsuario) {
+        var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(nombreUsuario);
+        if (usuarioOp.isEmpty()) {
+            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+        }
+        var usuario = this.usuarioMapper.mapToDto(usuarioOp.get());
+        return usuario;
+    }
 }

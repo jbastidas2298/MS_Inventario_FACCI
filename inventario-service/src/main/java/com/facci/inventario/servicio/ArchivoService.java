@@ -96,12 +96,20 @@ public class ArchivoService {
                 throw new CustomException(EnumErrores.CARPETA_NO_CREADA);
             }
 
-            String pdfFileName = String.format("%s-%s.pdf", articulo.getCodigoInterno(), articulo.getCodigoOrigen());
-            Path pdfFilePath = Paths.get(folderPath, pdfFileName);
+            String originalFileName = file.getOriginalFilename();
+            if (originalFileName == null || originalFileName.isEmpty()) {
+                log.error("El archivo proporcionado no tiene un nombre válido.");
+                throw new CustomException(EnumErrores.PDF_NO_VALIDO);
+            }
+
+            String cleanedFileName = originalFileName.replaceAll("[^a-zA-Z0-9.-]", "_");
+
+            Path pdfFilePath = Paths.get(folderPath, cleanedFileName);
+
 
             Files.copy(file.getInputStream(), pdfFilePath, StandardCopyOption.REPLACE_EXISTING);
             log.info("PDF guardado exitosamente en la ruta: {}", pdfFilePath);
-            guardarRutaPath(articulo.getId(),TipoArchivo.IMAGEN,pdfFilePath.toString());
+            guardarRutaPath(articulo.getId(),TipoArchivo.PDF,pdfFilePath.toString());
 
             return pdfFilePath.toString();
         } catch (IOException e) {

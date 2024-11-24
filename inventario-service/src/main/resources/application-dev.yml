@@ -25,3 +25,6 @@ jwt:
 
 articulo:
   carpeta-imagenes: C:/imagenes/
+
+configuracion-service:
+  url: http://localhost:8099

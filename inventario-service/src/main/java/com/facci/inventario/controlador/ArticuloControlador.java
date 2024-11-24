@@ -1,17 +1,18 @@
 package com.facci.inventario.controlador;
 
+import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloDTO;
+import com.facci.inventario.dto.ArticuloDetalleDTO;
 import com.facci.inventario.enums.EnumErrores;
+import com.facci.inventario.enums.TipoRelacion;
 import com.facci.inventario.handler.CustomException;
 import com.facci.inventario.servicio.ArchivoService;
+import com.facci.inventario.servicio.ArticuloAsignacionService;
 import com.facci.inventario.servicio.ArticuloService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,15 +24,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/inventario/articulo/items")
 @Tag(name = "Articulo", description = "Operaciones relacionadas con articulos")
-public class InventarioControlador {
+public class ArticuloControlador {
 
     private final ArticuloService articuloService;
     private final ArchivoService archivoService;
+    private final ArticuloAsignacionService articuloAsignacionService;
 
-
-    public InventarioControlador(ArticuloService articuloService, ArchivoService archivoService) {
+    public ArticuloControlador(ArticuloService articuloService, ArchivoService archivoService, ArticuloAsignacionService articuloAsignacionService) {
         this.articuloService = articuloService;
         this.archivoService = archivoService;
+        this.articuloAsignacionService = articuloAsignacionService;
     }
 
     @PostMapping
@@ -137,4 +139,74 @@ public class InventarioControlador {
         }
     }
 
+    @PostMapping("/asignar")
+    public ResponseEntity<List<ArticuloAsignacion>> asignarArticulos(
+            @RequestParam Long idRelacionado,
+            @RequestParam TipoRelacion tipoRelacion,
+            @RequestBody List<Long> idsArticulos) {
+        List<ArticuloAsignacion> asignaciones = articuloAsignacionService.asignarArticulos(idRelacionado, tipoRelacion, idsArticulos);
+        return ResponseEntity.ok(asignaciones);
+    }
+
+    @PostMapping("/reasignar-todos")
+    public ResponseEntity<List<ArticuloAsignacion>> reasignarArticulos(
+            @RequestParam Long idUsuarioActual,
+            @RequestParam Long idUsuarioNuevo,
+            @RequestParam String descripcion) {
+        List<ArticuloAsignacion> reasignaciones = articuloAsignacionService.reasignarArticulos(idUsuarioActual, idUsuarioNuevo, descripcion);
+        return ResponseEntity.ok(reasignaciones);
+    }
+
+    @PostMapping("/reasignar-articulo")
+    public ResponseEntity<ArticuloAsignacion> reasignarArticulo(
+            @RequestParam Long idArticulo,
+            @RequestParam Long idUsuarioNuevo,
+            @RequestParam String descripcion) {
+        ArticuloAsignacion reasignacion = articuloAsignacionService.reasignarArticulo(idArticulo, idUsuarioNuevo, descripcion);
+        return ResponseEntity.ok(reasignacion);
+    }
+
+    @GetMapping("/{id}/codigo-barras")
+    @Operation(summary = "Generar código de barras", description = "Genera un código de barras para el artículo dado su ID")
+    public ResponseEntity<byte[]> generarCodigoBarra(@PathVariable Long id) {
+        byte[] codigoBarras = articuloService.generarCodigoBarra(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentLength(codigoBarras.length);
+
+        return new ResponseEntity<>(codigoBarras, headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/codigo-barras/reporte")
+    public ResponseEntity<byte[]> generarReporteCodigosBarra(@RequestBody List<Long> articuloIds) {
+        byte[] pdfReporte = articuloService.generarReporteCodigosBarra(articuloIds);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename("reporte_codigos_barras.pdf")
+                .build());
+
+        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/reporteArticulo/{id}")
+    public ResponseEntity<byte[]> generarReporteArticulo(@PathVariable Long id) {
+        byte[] pdfReporte = articuloService.generarReporteArticuloCompleto(id);
+        ArticuloDTO articuloDTO = articuloService.consultarArticulo(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename("Reporte_"+articuloDTO.getCodigoInterno()+".pdf")
+                .build());
+
+        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/articuloDetalle/{id}")
+    @Operation(summary = "Obtener Modelo de articulo ", description = "Metodo para obtener el modelo completo del articulo")
+    public ArticuloDetalleDTO consultarArticuloDetalle(@PathVariable Long id) {
+        return articuloService.obtenerArticuloDetalle(id);
+    }
 }
