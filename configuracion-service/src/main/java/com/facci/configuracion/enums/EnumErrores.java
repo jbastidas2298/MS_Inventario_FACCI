@@ -4,7 +4,8 @@ public enum EnumErrores {
     USUARIO_YA_EXISTE("EC001", "El usuario ya existe."),
     AREA_YA_EXISTE("EC002", "El área ya existe."),
     USUARIO_NO_ENCONTRADO("EC003", "Usuario no encontrado."),
-    AREA_NO_ENCONTRADA("EC004", "Área no encontrada.");
+    AREA_NO_ENCONTRADA("EC004", "Área no encontrada."),
+    ERROR_INICIO_SECION("EC005", "Inicio no Autorizado");
 
     private final String codigo;
     private final String descripcion;

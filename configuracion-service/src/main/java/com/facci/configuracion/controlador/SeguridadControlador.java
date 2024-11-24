@@ -1,7 +1,10 @@
 package com.facci.configuracion.controlador;
 
+import com.facci.configuracion.enums.EnumErrores;
+import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.seguridad.JwtTokenProvider;
 import com.facci.configuracion.servicio.UsuarioService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,10 +15,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+@Slf4j
 @RestController
 public class SeguridadControlador {
 
@@ -30,7 +34,7 @@ public class SeguridadControlador {
     }
 
     @RequestMapping(value="/configuracion/login" , method = RequestMethod.POST)
-    public ResponseEntity<String> login(@RequestBody Map<String, String> loginRequest) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginRequest) {
         try {
             String username = loginRequest.get("username");
             String password = loginRequest.get("password");
@@ -42,10 +46,14 @@ public class SeguridadControlador {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList());
             String token = jwtTokenProvider.createToken(username,roles);
-            return ResponseEntity.ok(token);
+            Map<String, String> response = new HashMap<>();
+            response.put("token", "Bearer " + token);
+
+            return ResponseEntity.ok(response);
 
         } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Accesso no autorizado");
+            log.error("Error de autenticación: ", e);
+            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
         }
     }
 }

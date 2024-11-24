@@ -171,11 +171,12 @@
 						<dataSourceExpression><![CDATA[$P{imagenes}]]></dataSourceExpression>
 					</datasetRun>
 					<contents height="180" width="190">
-						<element kind="image" uuid="b1068764-812b-42d7-9220-2c0716b12caa" x="10" y="4" width="170" height="170">
+						<element kind="image" uuid="b1068764-812b-42d7-9220-2c0716b12caa" x="10" y="4" width="170" height="156">
 							<expression><![CDATA[$F{imagen}]]></expression>
 						</element>
 					</contents>
 				</component>
+				<property name="com.jaspersoft.studio.layout"/>
 			</element>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 		</band>

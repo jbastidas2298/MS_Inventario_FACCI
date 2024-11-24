@@ -1,23 +1,34 @@
 package com.facci.gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.ServerSecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
-    private final AuthenticationManager authenticationManager;
-    private final SecurityContextRepository securityContextRepository;
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
 
-    public SecurityConfig(AuthenticationManager authenticationManager,
-                             SecurityContextRepository securityContextRepository) {
+    private final ReactiveAuthenticationManager authenticationManager;
+    private final ServerSecurityContextRepository securityContextRepository;
+
+    public SecurityConfig(ReactiveAuthenticationManager authenticationManager,
+                          ServerSecurityContextRepository securityContextRepository) {
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
     }
@@ -26,20 +37,30 @@ public class SecurityConfig {
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authenticationManager(authenticationManager)
                 .securityContextRepository(securityContextRepository)
                 .authorizeExchange(exchange -> exchange
-                        // Permitir rutas públicas explícitamente
-                        .pathMatchers(
-                                "/configuracion/login" // Login público
-                        ).permitAll()
+                        .pathMatchers("/configuracion/login").permitAll() // Login público
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
-                        // Todo lo demás requiere autenticación
-                        .anyExchange().authenticated()
+                        .anyExchange().authenticated() // Todo lo demás requiere autenticación
                 )
                 .build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin(allowedOrigins);
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
 }
