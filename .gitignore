@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+inventario-service/logs
+configuracion-service/logs
+gateway-service/logs

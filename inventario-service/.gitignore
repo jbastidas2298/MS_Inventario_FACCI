@@ -32,8 +32,5 @@ out/
 /dist/
 /nbdist/
 /.nb-gradle/
-/inventario-service/logs
-/configuracion-service/logs
-/gateway-service/logs
 ### VS Code ###
 .vscode/
