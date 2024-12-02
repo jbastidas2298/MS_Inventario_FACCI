@@ -3,11 +3,13 @@ package com.facci.configuracion.servicio;
 import com.facci.configuracion.dominio.RolUsuario;
 import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.UsuarioDTO;
-import com.facci.configuracion.enums.EnumErrores;
+import com.facci.configuracion.enums.EnumCodigos;
 import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.map.UsuarioMapper;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
+import com.facci.configuracion.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,6 +28,10 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private UsuarioMapper usuarioMapper;
 
+    @Value("${spring.security.user.name}")
+    private String adminUsername;
+
+
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
@@ -39,7 +45,7 @@ public class UsuarioService {
         var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(usuarioDTO.getNombreUsuario());
         if (usuarioOp.isPresent()) {
             log.error("Ya se encuentra registrado el usuario: {}", usuarioDTO.getNombreUsuario());
-            throw new CustomException(EnumErrores.USUARIO_YA_EXISTE);
+            throw new CustomException(EnumCodigos.USUARIO_YA_EXISTE);
 
         }
         String encryptedPassword = passwordEncoder.encode(usuarioDTO.getContrasena());
@@ -52,19 +58,17 @@ public class UsuarioService {
 
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
-        // Buscar el usuario en la base de datos
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
 
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + usuarioDto.getId();
             log.error(mensajeError);
-            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+            throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
         }
 
         var usuarioRecargado = usuarioOp.get();
 
         try {
-            // Actualizar datos básicos del usuario
             usuarioRecargado.setActivo(usuarioDto.isActivo());
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
@@ -93,16 +97,17 @@ public class UsuarioService {
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + id;
             log.error(mensajeError);
-            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+            throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
         }
         try {
             usuarioRepositorio.delete(usuarioOp.get());
             log.info("Usuario eliminado con id: {}", id);
-            return ResponseEntity.ok("Usuario eliminado exitosamente.");
+            ApiResponse response = new ApiResponse(EnumCodigos.USUARIO_ELIMINADO, null);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             String mensajeError = "Error al eliminar el usuario con id: " + id;
             log.error(mensajeError, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mensajeError);
+            throw new CustomException(EnumCodigos.ERROR_ELIMINAR_USUARIO);
         }
     }
 
@@ -121,7 +126,7 @@ public class UsuarioService {
         } catch (Exception e) {
             String mensajeError = "Error al obtener el usuario con id: " + id;
             log.error(mensajeError, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            throw new CustomException(EnumCodigos.ERROR_CONSULTA_USUARIO);
         }
     }
 
@@ -145,8 +150,11 @@ public class UsuarioService {
     @Transactional(readOnly = true)
     public UsuarioDTO listarPorNombreUsuario(String nombreUsuario) {
         var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(nombreUsuario);
+        if (adminUsername.equalsIgnoreCase(nombreUsuario)) {
+            return null;
+        }
         if (usuarioOp.isEmpty()) {
-            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+            throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
         }
         var usuario = this.usuarioMapper.mapToDto(usuarioOp.get());
         return usuario;

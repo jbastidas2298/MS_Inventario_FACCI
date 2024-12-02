@@ -3,7 +3,7 @@ package com.facci.configuracion.servicio;
 import com.facci.configuracion.dominio.Area;
 import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.AreaDTO;
-import com.facci.configuracion.enums.EnumErrores;
+import com.facci.configuracion.enums.EnumCodigos;
 import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.repositorio.AreaRepositorio;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
@@ -33,13 +33,13 @@ public class AreaService {
         areaRepositorio.findByNombreArea(areaDTO.getNombreArea())
                 .ifPresent(existingArea -> {
                     log.error("Error al registrar el área. El área con nombre '{}' ya existe.", areaDTO.getNombreArea());
-                    throw new CustomException(EnumErrores.AREA_YA_EXISTE);
+                    throw new CustomException(EnumCodigos.AREA_YA_EXISTE);
                 });
 
         Usuario usuarioEncargado = usuarioRepositorio.findById(areaDTO.getUsuarioEncargadoId())
                 .orElseThrow(() -> {
                     log.error("Error al registrar el área. Usuario encargado no encontrado con ID: {}", areaDTO.getUsuarioEncargadoId());
-                    return new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+                    return new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
                 });
 
         Area nuevaArea = new Area(areaDTO.getNombreArea(), usuarioEncargado);
@@ -66,13 +66,13 @@ public class AreaService {
         Area areaExistente = areaRepositorio.findById(areaDTO.getId())
                 .orElseThrow(() -> {
                     log.error("Error al actualizar. Área no encontrada con ID: {}", areaDTO.getId());
-                    return new CustomException(EnumErrores.AREA_NO_ENCONTRADA);
+                    return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
         areaExistente.setNombreArea(areaDTO.getNombreArea());
         Usuario usuarioEncargado = usuarioRepositorio.findById(areaDTO.getUsuarioEncargadoId())
                 .orElseThrow(() -> {
                     log.error("Error al actualizar el área. Usuario encargado no encontrado con ID: {}",areaDTO.getUsuarioEncargadoId());
-                    return new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+                    return new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
                 });
 
         areaExistente.setUsuarioEncargado(usuarioEncargado);
@@ -93,7 +93,7 @@ public class AreaService {
         Area area = areaRepositorio.findById(id)
                 .orElseThrow(() -> {
                     log.error("Error al eliminar. Área no encontrada con ID: {}", id);
-                    return new CustomException(EnumErrores.AREA_NO_ENCONTRADA);
+                    return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
         areaRepositorio.delete(area);
         log.info("Área eliminada con éxito. ID: {}", id);
@@ -111,7 +111,7 @@ public class AreaService {
         Area area = areaRepositorio.findById(id)
                 .orElseThrow(() -> {
                     log.error("Error al consultar. Área no encontrada con ID: {}", id);
-                    return new CustomException(EnumErrores.AREA_NO_ENCONTRADA);
+                    return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
         log.info("Área consultada con éxito: {}", area);
         return area;

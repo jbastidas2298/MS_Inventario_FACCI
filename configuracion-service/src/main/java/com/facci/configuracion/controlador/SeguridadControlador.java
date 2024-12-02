@@ -1,18 +1,17 @@
 package com.facci.configuracion.controlador;
 
-import com.facci.configuracion.enums.EnumErrores;
+import com.facci.configuracion.enums.EnumCodigos;
 import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.seguridad.JwtTokenProvider;
 import com.facci.configuracion.servicio.UsuarioService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -51,9 +50,12 @@ public class SeguridadControlador {
 
             return ResponseEntity.ok(response);
 
-        } catch (AuthenticationException e) {
+        } catch (BadCredentialsException e) {
             log.error("Error de autenticación: ", e);
-            throw new CustomException(EnumErrores.USUARIO_NO_ENCONTRADO);
+            throw new CustomException(EnumCodigos.ERROR_CREDENCIALES);
+        }catch (AuthenticationException e) {
+            log.error("Error de autenticación: ", e);
+            throw new CustomException(EnumCodigos.ERROR_INICIO);
         }
     }
 }

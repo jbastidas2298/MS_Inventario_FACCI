@@ -19,7 +19,7 @@ logging:
   level:
     root: INFO
     com.facci: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: WARN
   file:
     name: configuracion-service/logs/configuracion-service.log
   pattern:

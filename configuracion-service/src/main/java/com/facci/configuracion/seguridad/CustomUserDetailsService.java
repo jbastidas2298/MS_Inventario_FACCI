@@ -32,10 +32,11 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         if (username.equals(adminUsername)) {
+            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ADMINISTRADOR"));
             return User.builder()
                     .username(adminUsername)
                     .password(adminPassword)
-                    .roles("ADMINISTRADOR")
+                    .authorities(authorities)
                     .build();
         }
 

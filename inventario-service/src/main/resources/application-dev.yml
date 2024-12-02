@@ -16,7 +16,7 @@ logging:
     root: INFO
     com.facci: DEBUG
   file:
-    name: /var/logs/inventario-service.log
+    name: inventario-service/logs/inventario-service.log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 jwt:
