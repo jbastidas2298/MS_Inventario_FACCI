@@ -1,5 +1,6 @@
 package com.facci.configuracion.dominio;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,7 @@ public class Area extends EntidadBase {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_encargado_id", nullable = false)
+    @JsonIgnore
     private Usuario usuarioEncargado;
 
     public Area(String nombreArea, Usuario usuarioEncargado ) {

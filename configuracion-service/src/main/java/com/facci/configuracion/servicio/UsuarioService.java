@@ -72,8 +72,11 @@ public class UsuarioService {
             usuarioRecargado.setActivo(usuarioDto.isActivo());
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
-
             usuarioRecargado.getRoles().clear();
+            if(!usuarioDto.getContrasena().isEmpty()){
+                String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
+                usuarioDto.setContrasena(encryptedPassword);
+            }
             List<RolUsuario> nuevosRoles = usuarioDto.getRoles().stream()
                     .map(rolEnum -> new RolUsuario(rolEnum, usuarioRecargado))
                     .collect(Collectors.toList());

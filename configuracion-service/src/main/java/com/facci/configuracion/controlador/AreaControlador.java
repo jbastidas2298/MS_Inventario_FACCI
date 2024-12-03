@@ -31,7 +31,7 @@ public class AreaControlador {
     }
 
 
-    @PutMapping()
+    @PutMapping("/{id}")
     @Operation(summary = "Actualizar un área existente", description = "Actualiza la información de un área ya registrada")
     public ResponseEntity<Map<String, Object>> actualizar(@RequestBody AreaDTO areaDTO) {
         Area areaActualizada = areaService.actualizar(areaDTO);
@@ -53,10 +53,11 @@ public class AreaControlador {
 
     @GetMapping
     @Operation(summary = "Consultar todas las áreas", description = "Obtiene una lista de todas las áreas registradas en el sistema")
-    public ResponseEntity<Iterable<Area>> consultarAreas() {
-        Iterable<Area> areas = areaService.consultarTodas();
-        return ResponseEntity.ok(areas);
+    public ResponseEntity<List<AreaDTO>> consultarAreas() {
+        List<AreaDTO> areaDTOs = areaService.consultarTodas();
+        return ResponseEntity.ok(areaDTOs);
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Consultar área por ID", description = "Obtiene un área registrada en el sistema")

@@ -26,7 +26,7 @@ public class UsuarioControlador {
         return usuarioService.registrar(dto);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(summary = "Actualizar un usuario existente", description = "Actualiza la información de un usuario ya registrado")
     public ResponseEntity<?> actualizar(@RequestBody UsuarioDTO dto) {
         return usuarioService.actualizar(dto);

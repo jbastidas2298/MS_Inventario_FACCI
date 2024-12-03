@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @Service
@@ -99,12 +102,22 @@ public class AreaService {
         log.info("Área eliminada con éxito. ID: {}", id);
     }
 
-    public Iterable<Area> consultarTodas() {
+    public List<AreaDTO> consultarTodas() {
         log.info("Consultando todas las áreas.");
-        Iterable<Area> areas = areaRepositorio.findAll();
-        log.info("Consulta de todas las áreas realizada con éxito. Total de áreas: {}", ((Collection<?>) areas).size());
-        return areas;
+
+        Iterable<Area> iterable = areaRepositorio.findAll();
+
+        List<Area> areas = StreamSupport.stream(iterable.spliterator(), false)
+                .collect(Collectors.toList());
+        List<AreaDTO> areaDTOs = areas.stream()
+                .map(AreaDTO::new) // Convertir cada Area a un AreaDTO
+                .collect(Collectors.toList());
+
+        log.info("Consulta de todas las áreas realizada con éxito. Total de áreas: {}", areaDTOs.size());
+        return areaDTOs;
     }
+
+
 
     public Area consultarArea(Long id) {
         log.info("Intentando consultar el área con ID: {}", id);
