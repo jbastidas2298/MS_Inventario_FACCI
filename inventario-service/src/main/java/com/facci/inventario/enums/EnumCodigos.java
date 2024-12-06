@@ -1,6 +1,6 @@
 package com.facci.inventario.enums;
 
-public enum EnumErrores {
+public enum EnumCodigos {
     ARTICULO_YA_EXISTE("EI001", "El artículo ya existe."),
     ARTICULO_NO_ENCONTRADO("EI002", "El artículo no fue encontrado."),
     ARTICULO_ERROR_ACTUALIZAR("EI003", "Error al actualizar el artículo."),
@@ -21,13 +21,14 @@ public enum EnumErrores {
     REPORTE_NO_ENCONTRADO("EI018","EL reporte no fue encontrado"),
     REPORTE_ERROR_GENERAR("EI019","Error al generar el reporte"),
     ARTICULO_ASIGNADO_NO_ELIMINABLE("EI020","Articulo Asigando no es posible eliminar"),
-    ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF");
+    ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF"),
+    ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito");
 
 
     private final String codigo;
     private final String descripcion;
 
-    EnumErrores(String codigo, String descripcion) {
+    EnumCodigos(String codigo, String descripcion) {
         this.codigo = codigo;
         this.descripcion = descripcion;
     }
@@ -40,8 +41,8 @@ public enum EnumErrores {
         return descripcion;
     }
 
-    public static EnumErrores fromCodigo(String codigo) {
-        for (EnumErrores error : values()) {
+    public static EnumCodigos fromCodigo(String codigo) {
+        for (EnumCodigos error : values()) {
             if (error.codigo.equals(codigo)) {
                 return error;
             }

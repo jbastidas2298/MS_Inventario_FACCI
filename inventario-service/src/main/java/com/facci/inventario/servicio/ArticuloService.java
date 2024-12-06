@@ -4,7 +4,7 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.*;
-import com.facci.inventario.enums.EnumErrores;
+import com.facci.inventario.enums.EnumCodigos;
 import com.facci.inventario.enums.TipoArchivo;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.enums.TipoRelacion;
@@ -69,7 +69,7 @@ public class ArticuloService {
         Optional<Articulo> articuloExistente = articuloRepositorio.findByCodigoOrigen(dto.getCodigoOrigen());
         if (articuloExistente.isPresent()) {
             log.error("El artículo con código de origen '{}' ya existe.", dto.getCodigoOrigen());
-            throw new CustomException(EnumErrores.ARTICULO_YA_EXISTE);
+            throw new CustomException(EnumCodigos.ARTICULO_YA_EXISTE);
         }
 
         String secuencial = secuencialService.generarSecuencial("Articulo");
@@ -78,12 +78,12 @@ public class ArticuloService {
         Articulo articuloGuardado = articuloRepositorio.save(nuevoArticulo);
 
         String usuario = usuarioSesionService.obtenerUsuarioActual()
-                .orElseThrow(() -> new CustomException(EnumErrores.USUARIO_ASIGNAR_EN_SESION));
+                .orElseThrow(() -> new CustomException(EnumCodigos.USUARIO_ASIGNAR_EN_SESION));
 
         UsuarioDTO usuarioSesion = configuracionService.buscarPorNombreUsuario(usuario);
         if (usuarioSesion == null) {
             log.error("No se encontró información del usuario en el servicio de configuración para '{}'.", usuario);
-            throw new CustomException(EnumErrores.USUARIO_ASIGNAR_EN_SESION);
+            throw new CustomException(EnumCodigos.USUARIO_ASIGNAR_EN_SESION);
         }
         articuloHistorialService.registrarEvento(articuloGuardado, TipoOperacion.INGRESO, TipoOperacion.INGRESO + " " + articuloGuardado.getObservacion());
         articuloAsignacionService.asignarArticulos(
@@ -98,7 +98,7 @@ public class ArticuloService {
 
     public ArticuloDTO actualizar(ArticuloDTO articuloDTO) {
         Articulo articuloExistente = articuloRepositorio.findById(articuloDTO.getId())
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
 
         articuloExistente.setNombre(articuloDTO.getNombre());
         articuloExistente.setDescripcion(articuloDTO.getDescripcion());
@@ -111,11 +111,11 @@ public class ArticuloService {
 
     public void eliminar(Long id) {
         Articulo articulo = articuloRepositorio.findById(id)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
 
         Optional<ArticuloAsignacion> articuloAsignacion = articuloAsignacionRepositorio.findByArticuloId(id);
         if (!articuloAsignacion.isEmpty()) {
-            throw new CustomException(EnumErrores.ARTICULO_ASIGNADO_NO_ELIMINABLE);
+            throw new CustomException(EnumCodigos.ARTICULO_ASIGNADO_NO_ELIMINABLE);
         }
         articuloRepositorio.delete(articulo);
         log.info("Artículo eliminado con id: {}", id);
@@ -123,7 +123,7 @@ public class ArticuloService {
 
     public ArticuloDTO consultarArticulo(long id) {
         Articulo articulo = articuloRepositorio.findById(id)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
         return articuloMapper.mapToDto(articulo);
     }
 
@@ -138,7 +138,7 @@ public class ArticuloService {
 
     public byte[] generarCodigoBarra(Long articuloId) {
         Articulo articulo = articuloRepositorio.findById(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
         String codigoInterno = articulo.getCodigoInterno();
 
         try {
@@ -155,7 +155,7 @@ public class ArticuloService {
             return outputStream.toByteArray();
         } catch (WriterException | IOException e) {
             log.info("Error al generar Codigo de barras", e);
-            throw new CustomException(EnumErrores.CODIGO_BARRAS_GENERAR);
+            throw new CustomException(EnumCodigos.CODIGO_BARRAS_GENERAR);
         }
     }
 
@@ -165,7 +165,7 @@ public class ArticuloService {
         try {
             InputStream jasperStream = getClass().getResourceAsStream("/reportes/codigo_barras.jasper");
             if (jasperStream == null) {
-                throw new CustomException(EnumErrores.REPORTE_NO_ENCONTRADO);
+                throw new CustomException(EnumCodigos.REPORTE_NO_ENCONTRADO);
             }
             JasperReport jasperReport = (JasperReport) JRLoader.loadObject(jasperStream);
             JRDataSource dataSource = new JRBeanCollectionDataSource(datos);
@@ -177,7 +177,7 @@ public class ArticuloService {
             return pdfStream.toByteArray();
         } catch (JRException e) {
             log.error("Error al generar el reporte de códigos de barras", e);
-            throw new CustomException(EnumErrores.REPORTE_ERROR_GENERAR);
+            throw new CustomException(EnumCodigos.REPORTE_ERROR_GENERAR);
         }
     }
 
@@ -186,7 +186,7 @@ public class ArticuloService {
 
         for (Long articuloId : articuloIds) {
             Articulo articulo = articuloRepositorio.findById(articuloId)
-                    .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                    .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
             String codigoInterno = articulo.getCodigoInterno();
             try {
                 InputStream codigoBarraStream = generarCodigoBarraReporte(articuloId);
@@ -196,7 +196,7 @@ public class ArticuloService {
                 datos.add(item);
             } catch (Exception e) {
                 log.error("Error al generar el código de barras para el artículo con ID {}", articuloId, e);
-                throw new CustomException(EnumErrores.CODIGO_BARRAS_GENERAR);
+                throw new CustomException(EnumCodigos.CODIGO_BARRAS_GENERAR);
             }
         }
 
@@ -207,7 +207,7 @@ public class ArticuloService {
         ArticuloDetalleDTO detalleDTO = new ArticuloDetalleDTO();
 
         Articulo articulo = articuloRepositorio.findById(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
         ArticuloDTO articuloDTO = articuloMapper.mapToDto(articulo);
         detalleDTO.setArticulo(articuloDTO);
 
@@ -231,7 +231,7 @@ public class ArticuloService {
         detalleDTO.setHistorial(historial);
 
         ArticuloAsignacion asignacion = articuloAsignacionRepositorio.findByArticuloId(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ASIGNACIONES_NO_ENCONTRADAS));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS));
 
         UsuarioDTO usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
         detalleDTO.setUsuarioAsignado(usuarioDTO);
@@ -268,7 +268,7 @@ public class ArticuloService {
             return outputStream.toByteArray();
         } catch (Exception e) {
             log.error("Error al combinar los PDFs", e);
-            throw new CustomException(EnumErrores.ERROR_COMBINAR_PDFS);
+            throw new CustomException(EnumCodigos.ERROR_COMBINAR_PDFS);
         }
     }
 
@@ -302,17 +302,17 @@ public class ArticuloService {
             return outputStream.toByteArray();
         } catch (JRException | IOException e) {
             log.error("Error al generar el reporte del artículo", e);
-            throw new CustomException(EnumErrores.REPORTE_ERROR_GENERAR);
+            throw new CustomException(EnumCodigos.REPORTE_ERROR_GENERAR);
         }
     }
 
     private ArticuloDetalleDTO obtenerDetalleArticulo(Long articuloId) {
         Articulo articulo = articuloRepositorio.findById(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
         ArticuloDTO articuloDTO = articuloMapper.mapToDto(articulo);
 
         ArticuloAsignacion asignacion = articuloAsignacionRepositorio.findByArticuloId(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ASIGNACIONES_NO_ENCONTRADAS));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS));
         UsuarioDTO usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
 
         ArticuloDetalleDTO detalleDTO = new ArticuloDetalleDTO();
@@ -364,11 +364,11 @@ public class ArticuloService {
                             InputStream imagenStream = new FileInputStream(imagenFile);
                             map.put("imagen", imagenStream);
                         } else {
-                            throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                            throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                         }
                     } catch (IOException e) {
                         log.error("No se encontró la imagen en el path: {}", archivo.getPath(), e);
-                        throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                        throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                     }
                     return map;
                 }).collect(Collectors.toList());
@@ -383,17 +383,17 @@ public class ArticuloService {
                             return new FileInputStream(pdfFile);
                         } catch (FileNotFoundException e) {
                             log.error("No se encontró el archivo PDF en el path: {}", archivo.getPath(), e);
-                            throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                            throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                         }
                     } else {
-                        throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                        throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                     }
                 }).collect(Collectors.toList());
     }
 
     public InputStream generarCodigoBarraReporte(Long articuloId) {
         Articulo articulo = articuloRepositorio.findById(articuloId)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
         String codigoInterno = articulo.getCodigoInterno();
 
         try {
@@ -408,7 +408,7 @@ public class ArticuloService {
             return new ByteArrayInputStream(outputStream.toByteArray());
         } catch (WriterException | IOException e) {
             log.error("Error al generar el código de barras", e);
-            throw new CustomException(EnumErrores.CODIGO_BARRAS_GENERAR);
+            throw new CustomException(EnumCodigos.CODIGO_BARRAS_GENERAR);
         }
     }
 

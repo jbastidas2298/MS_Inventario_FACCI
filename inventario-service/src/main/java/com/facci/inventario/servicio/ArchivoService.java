@@ -2,7 +2,7 @@ package com.facci.inventario.servicio;
 
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloArchivo;
-import com.facci.inventario.enums.EnumErrores;
+import com.facci.inventario.enums.EnumCodigos;
 import com.facci.inventario.enums.TipoArchivo;
 import com.facci.inventario.handler.CustomException;
 import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
@@ -43,15 +43,15 @@ public class ArchivoService {
     }
     public String guardarImagen(Long idArticulo, MultipartFile file) {
         if (file.isEmpty()) {
-            throw new CustomException(EnumErrores.IMAGEN_ARCHIVO_VACIO);
+            throw new CustomException(EnumCodigos.IMAGEN_ARCHIVO_VACIO);
         }
 
         if (!file.getContentType().startsWith("image/")) {
-            throw new CustomException(EnumErrores.IMAGEN_NO_VALIDA);
+            throw new CustomException(EnumCodigos.IMAGEN_NO_VALIDA);
         }
 
         Articulo articulo = articuloRepositorio.findById(idArticulo)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
 
         try {
             Path carpetaArticulo = Paths.get(BASE_FOLDER, articulo.getCodigoInterno());
@@ -73,19 +73,19 @@ public class ArchivoService {
 
             return rutaImagen.toString();
         } catch (IOException e) {
-            throw new CustomException(EnumErrores.IMAGEN_ERROR_GUARDAR);
+            throw new CustomException(EnumCodigos.IMAGEN_ERROR_GUARDAR);
         }
     }
 
     public String guardarPdf(Long articuloId, MultipartFile file) {
         if (file.isEmpty() || !Objects.equals(file.getContentType(), "application/pdf")) {
             log.error("El archivo proporcionado no es un PDF válido.");
-            throw new CustomException(EnumErrores.PDF_NO_VALIDO);
+            throw new CustomException(EnumCodigos.PDF_NO_VALIDO);
         }
         Articulo articulo = articuloRepositorio.findById(articuloId)
                 .orElseThrow(() -> {
                     log.error("Artículo con ID {} no encontrado.", articuloId);
-                    return new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO);
+                    return new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO);
                 });
 
         try {
@@ -93,13 +93,13 @@ public class ArchivoService {
             File folder = new File(folderPath);
             if (!folder.exists() && !folder.mkdirs()) {
                 log.error("No se pudo crear la carpeta para el artículo con ID {}.", articuloId);
-                throw new CustomException(EnumErrores.CARPETA_NO_CREADA);
+                throw new CustomException(EnumCodigos.CARPETA_NO_CREADA);
             }
 
             String originalFileName = file.getOriginalFilename();
             if (originalFileName == null || originalFileName.isEmpty()) {
                 log.error("El archivo proporcionado no tiene un nombre válido.");
-                throw new CustomException(EnumErrores.PDF_NO_VALIDO);
+                throw new CustomException(EnumCodigos.PDF_NO_VALIDO);
             }
 
             String cleanedFileName = originalFileName.replaceAll("[^a-zA-Z0-9.-]", "_");
@@ -114,7 +114,7 @@ public class ArchivoService {
             return pdfFilePath.toString();
         } catch (IOException e) {
             log.error("Error al guardar el PDF para el artículo con ID {}.", articuloId, e);
-            throw new CustomException(EnumErrores.PDF_ERROR_GUARDAR);
+            throw new CustomException(EnumCodigos.PDF_ERROR_GUARDAR);
         }
     }
 
@@ -124,17 +124,17 @@ public class ArchivoService {
                     try {
                         Path filePath = Paths.get(archivo.getPath());
                         if (!Files.exists(filePath) || !Files.isReadable(filePath)) {
-                            throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                            throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                         }
                         return new UrlResource(filePath.toUri());
                     } catch (MalformedURLException e) {
                         log.error("Error al construir la URL del recurso para el archivo en la ruta: {}", path, e);
-                        throw new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                        throw new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                     }
                 })
                 .orElseThrow(() -> {
                     log.error("Archivo no encontrado en la base de datos para la ruta: {}", path);
-                    return new CustomException(EnumErrores.ARCHIVO_NO_ENCONTRADO);
+                    return new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO);
                 });
     }
 

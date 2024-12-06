@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=configuracion_facci_service;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://localhost:1433;databaseName=facci_configuracion;encrypt=true;trustServerCertificate=true
     username: sa
     password: Alt!ora2015
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

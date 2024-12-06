@@ -2,7 +2,7 @@ package com.facci.inventario.servicio;
 
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
-import com.facci.inventario.enums.EnumErrores;
+import com.facci.inventario.enums.EnumCodigos;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.enums.TipoRelacion;
 import com.facci.inventario.handler.CustomException;
@@ -50,7 +50,7 @@ public class ArticuloAsignacionService {
         List<ArticuloAsignacion> asignacionesActuales = articuloAsignacionRepositorio.findByIdUsuario(idUsuarioActual);
 
         if (asignacionesActuales.isEmpty()) {
-            throw new CustomException(EnumErrores.ASIGNACIONES_NO_ENCONTRADAS);
+            throw new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS);
         }
 
         return asignacionesActuales.stream()
@@ -71,7 +71,7 @@ public class ArticuloAsignacionService {
 
     public ArticuloAsignacion reasignarArticulo(Long idArticulo, Long idUsuarioNuevo, String descripcion) {
         ArticuloAsignacion asignacionActual = articuloAsignacionRepositorio.findByArticuloId(idArticulo)
-                .orElseThrow(() -> new CustomException(EnumErrores.ASIGNACIONES_NO_ENCONTRADAS));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS));
 
         Long idUsuarioAnterior = asignacionActual.getIdUsuario();
         asignacionActual.setIdUsuario(idUsuarioNuevo);
@@ -89,6 +89,6 @@ public class ArticuloAsignacionService {
 
     private Articulo obtenerArticuloPorId(Long idArticulo) {
         return articuloRepositorio.findById(idArticulo)
-                .orElseThrow(() -> new CustomException(EnumErrores.ARTICULO_NO_ENCONTRADO));
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
     }
 }

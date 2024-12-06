@@ -13,7 +13,6 @@ public class ApiResponse {
         this.data = data;
     }
 
-    // Getters y Setters
     public String getCodigo() {
         return codigo;
     }

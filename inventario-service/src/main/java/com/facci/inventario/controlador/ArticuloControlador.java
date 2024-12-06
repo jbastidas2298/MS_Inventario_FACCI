@@ -3,9 +3,10 @@ package com.facci.inventario.controlador;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.dto.ArticuloDetalleDTO;
-import com.facci.inventario.enums.EnumErrores;
+import com.facci.inventario.enums.EnumCodigos;
 import com.facci.inventario.enums.TipoRelacion;
 import com.facci.inventario.handler.CustomException;
+import com.facci.inventario.response.ApiResponse;
 import com.facci.inventario.servicio.ArchivoService;
 import com.facci.inventario.servicio.ArticuloAsignacionService;
 import com.facci.inventario.servicio.ArticuloService;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/inventario/articulo/items")
@@ -71,18 +73,23 @@ public class ArticuloControlador {
     }
 
     @PostMapping("/{id}/imagen")
-    public ResponseEntity<String> subirImagen(@PathVariable Long id, @RequestParam("imagen") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> subirImagen(@PathVariable Long id, @RequestParam("imagen") MultipartFile file) {
         try {
             String imagePath = archivoService.guardarImagen(id, file);
-            return ResponseEntity.ok(imagePath);
+            return ResponseEntity.ok(
+                    ApiResponse.buildResponse(
+                            EnumCodigos.ARCHIVO_SUBIDO_EXITO
+                    )
+            );
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Error: " + e.getMessage());
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error interno: " + e.getMessage());
+                    .body(Map.of("error", "Error interno: " + e.getMessage()));
         }
     }
+
 
 
     @PostMapping("/{id}/pdf")
@@ -101,7 +108,7 @@ public class ArticuloControlador {
     public ResponseEntity<Resource> descargarArchivo(@RequestBody String path) {
         try {
             if (path == null || path.isEmpty()) {
-                throw new CustomException(EnumErrores.PATH_INVALIDO);
+                throw new CustomException(EnumCodigos.PATH_INVALIDO);
             }
 
             Resource file = archivoService.obtenerArchivo(path);
@@ -122,7 +129,7 @@ public class ArticuloControlador {
     public ResponseEntity<Resource> visualizarArchivo(@RequestBody String path) {
         try {
             if (path == null || path.isEmpty()) {
-                throw new CustomException(EnumErrores.PATH_INVALIDO);
+                throw new CustomException(EnumCodigos.PATH_INVALIDO);
             }
 
             Resource file = archivoService.obtenerArchivo(path);
