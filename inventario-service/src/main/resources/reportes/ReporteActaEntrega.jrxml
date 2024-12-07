@@ -90,7 +90,7 @@
 			<element kind="textField" uuid="d1168cea-64de-46ee-944d-8f1cea229832" x="110" y="82" width="200" height="20">
 				<expression><![CDATA[$F{codigoInterno}]]></expression>
 			</element>
-			<element kind="textField" uuid="28d7a6e7-c8a9-46f3-9889-c352e53e9cf5" x="140" y="310" width="239" height="154">
+			<element kind="textField" uuid="28d7a6e7-c8a9-46f3-9889-c352e53e9cf5" x="10" y="300" width="239" height="154">
 				<expression><![CDATA["Entrega:\n" + 
 $F{usuarioEntrega} + "\n\n" +
 "Firma: __________________________\n\n\n" +
