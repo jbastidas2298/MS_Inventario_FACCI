@@ -75,46 +75,49 @@
 	<field name="nombreArticulo" class="java.lang.String"/>
 	<field name="logo" class="java.io.InputStream"/>
 	<title height="200">
-		<element kind="staticText" uuid="37d1ae9c-1273-461b-8927-d7ab7291b306" x="100" y="10" width="420" height="44" fontSize="16.0" bold="true" hTextAlign="Center">
-			<text><![CDATA[UNIVERSIDAD LAICA ELOY ALFARO DE MANABÍ FACULTAD DE CIENCIAS INFORMATICA]]></text>
+		<element kind="staticText" uuid="37d1ae9c-1273-461b-8927-d7ab7291b306" x="86" y="10" width="440" height="44" fontSize="16.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[UNIVERSIDAD LAICA ELOY ALFARO DE MANABÍ FACULTAD DE CIENCIAS DE LA VIDA Y TECNOLOGÍAS]]></text>
 		</element>
 		<element kind="image" uuid="1bcec75a-310b-4b42-ac78-adbeddc226a9" stretchType="NoStretch" mode="Transparent" x="10" y="-10" width="70" height="65" scaleImage="RetainShape">
 			<expression><![CDATA[$F{logo}]]></expression>
 		</element>
-		<element kind="staticText" uuid="d9042e93-cd85-47db-9dc1-b98e943504ca" mode="Opaque" x="3" y="60" width="550" height="30" forecolor="#FFFFFF" backcolor="#30B86B" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+		<element kind="staticText" uuid="d9042e93-cd85-47db-9dc1-b98e943504ca" mode="Opaque" x="3" y="72" width="550" height="30" forecolor="#FFFFFF" backcolor="#30B86B" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
 			<text><![CDATA[REPORTE DE INVENTARIO]]></text>
 		</element>
-		<element kind="staticText" uuid="2c887a95-f5ee-468c-b5bf-71a1f9765132" x="80" y="100" width="100" height="20" bold="true">
+		<element kind="staticText" uuid="2c887a95-f5ee-468c-b5bf-71a1f9765132" x="80" y="112" width="100" height="20" bold="true">
 			<text><![CDATA[Articulo: ]]></text>
 		</element>
-		<element kind="textField" uuid="5de31058-a0c7-4dd1-8e5f-3dfd30c9cbc4" x="180" y="100" width="200" height="20">
+		<element kind="textField" uuid="5de31058-a0c7-4dd1-8e5f-3dfd30c9cbc4" x="180" y="112" width="200" height="20">
 			<expression><![CDATA[$F{nombreArticulo}]]></expression>
 		</element>
-		<element kind="staticText" uuid="179f28a0-583f-4916-b59f-9d30923e2f1d" x="80" y="120" width="100" height="20" bold="true">
+		<element kind="staticText" uuid="179f28a0-583f-4916-b59f-9d30923e2f1d" x="80" y="132" width="100" height="20" bold="true">
 			<text><![CDATA[Código Origen:]]></text>
 		</element>
-		<element kind="textField" uuid="74065059-1586-4221-ad65-1e4bc19dbd58" x="180" y="142" width="200" height="20">
+		<element kind="textField" uuid="74065059-1586-4221-ad65-1e4bc19dbd58" x="180" y="154" width="200" height="20">
 			<expression><![CDATA[$F{codigoInterno}]]></expression>
 		</element>
-		<element kind="textField" uuid="b4b35ce1-7a32-4f3b-9f47-3900eb6ef3d1" x="180" y="120" width="200" height="20">
+		<element kind="textField" uuid="b4b35ce1-7a32-4f3b-9f47-3900eb6ef3d1" x="180" y="132" width="200" height="20">
 			<expression><![CDATA[$F{codigoOrigen}]]></expression>
 		</element>
-		<element kind="staticText" uuid="7314c7a5-7d28-4628-bae9-91a9eb2ad8c2" x="80" y="162" width="100" height="16" bold="true">
+		<element kind="staticText" uuid="7314c7a5-7d28-4628-bae9-91a9eb2ad8c2" x="80" y="174" width="100" height="16" bold="true">
 			<text><![CDATA[Usuario Asignado:]]></text>
 		</element>
-		<element kind="staticText" uuid="0a7e8420-3376-4874-b14f-bd66f37f25fc" x="80" y="142" width="100" height="20" bold="true">
+		<element kind="staticText" uuid="0a7e8420-3376-4874-b14f-bd66f37f25fc" x="80" y="154" width="100" height="20" bold="true">
 			<text><![CDATA[Código Interno:]]></text>
 		</element>
-		<element kind="textField" uuid="a57fb54e-7dba-4593-8ffb-dd04c127522d" x="180" y="162" width="200" height="16">
+		<element kind="textField" uuid="a57fb54e-7dba-4593-8ffb-dd04c127522d" x="180" y="174" width="200" height="16">
 			<expression><![CDATA[$F{usuarioAsignado}]]></expression>
 		</element>
-		<element kind="image" uuid="361e2377-122e-4ba7-b992-c6096c97b1ed" x="391" y="112" width="139" height="50">
+		<element kind="image" uuid="361e2377-122e-4ba7-b992-c6096c97b1ed" x="391" y="124" width="139" height="50">
 			<expression><![CDATA[$F{codigoBarra}]]></expression>
+		</element>
+		<element kind="textField" uuid="bd76c863-827d-4bce-a914-1b28ecf180d0" x="390" y="176" width="140" height="20" fontSize="8.0" bold="true" hTextAlign="Center">
+			<expression><![CDATA[$F{codigoInterno}]]></expression>
 		</element>
 		<property name="com.jaspersoft.studio.unit.height" value="px"/>
 	</title>
 	<detail>
-		<band height="300">
+		<band height="80">
 			<element kind="component" uuid="a47ac934-6ee3-499b-87a9-dc7241d6f074" x="18" y="10" width="519" height="50">
 				<component kind="table">
 					<datasetRun uuid="68d67207-e9e7-4779-b468-76da384059ef" subDataset="Dataset1">
@@ -165,7 +168,10 @@
 				<property name="com.jaspersoft.studio.table.style.column_header" value="Table_CH"/>
 				<property name="com.jaspersoft.studio.table.style.detail" value="Table_TD"/>
 			</element>
-			<element kind="component" uuid="ebf91ac0-5481-4deb-996e-e13e298b3c0e" x="190" y="90" width="190" height="180">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+		</band>
+		<band height="200">
+			<element kind="component" uuid="ebf91ac0-5481-4deb-996e-e13e298b3c0e" x="160" y="10" width="190" height="180">
 				<component kind="list">
 					<datasetRun uuid="054f74f1-30c8-43d9-98bc-6154aa4a3a25" subDataset="ImagenesDataset">
 						<dataSourceExpression><![CDATA[$P{imagenes}]]></dataSourceExpression>

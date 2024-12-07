@@ -1,6 +1,7 @@
 package com.facci.inventario.controlador;
 
 import com.facci.inventario.dominio.ArticuloAsignacion;
+import com.facci.inventario.dto.ArticuloAsignacionDTO;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.dto.ArticuloDetalleDTO;
 import com.facci.inventario.enums.EnumCodigos;
@@ -93,18 +94,24 @@ public class ArticuloControlador {
 
 
     @PostMapping("/{id}/pdf")
-    public ResponseEntity<String> subirPdf(@PathVariable Long id, @RequestParam("pdf") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> subirPdf(@PathVariable Long id, @RequestParam("pdf") MultipartFile file) {
         try {
             String pdfPath = archivoService.guardarPdf(id, file);
-            return ResponseEntity.ok("PDF guardado exitosamente en: " + pdfPath);
+            return ResponseEntity.ok(
+                    ApiResponse.buildResponse(
+                            EnumCodigos.ARCHIVO_SUBIDO_EXITO
+                    )
+            );
         } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar el PDF: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno: " + e.getMessage()));
         }
     }
 
-    @GetMapping("/archivo/descargar")
+    @PostMapping("/archivo/descargar")
     public ResponseEntity<Resource> descargarArchivo(@RequestBody String path) {
         try {
             if (path == null || path.isEmpty()) {
@@ -116,7 +123,7 @@ public class ArticuloControlador {
             String contentType = Files.probeContentType(Paths.get(path));
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"") // inline permite visualizar
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                     .body(file);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -125,7 +132,7 @@ public class ArticuloControlador {
         }
     }
 
-    @GetMapping("/archivo/ver")
+    @PostMapping("/archivo/ver")
     public ResponseEntity<Resource> visualizarArchivo(@RequestBody String path) {
         try {
             if (path == null || path.isEmpty()) {
@@ -147,31 +154,41 @@ public class ArticuloControlador {
     }
 
     @PostMapping("/asignar")
-    public ResponseEntity<List<ArticuloAsignacion>> asignarArticulos(
+    public ResponseEntity<List<ArticuloAsignacionDTO>> asignarArticulos(
             @RequestParam Long idRelacionado,
             @RequestParam TipoRelacion tipoRelacion,
             @RequestBody List<Long> idsArticulos) {
-        List<ArticuloAsignacion> asignaciones = articuloAsignacionService.asignarArticulos(idRelacionado, tipoRelacion, idsArticulos);
+        List<ArticuloAsignacionDTO> asignaciones = articuloAsignacionService.asignarArticulos(idRelacionado, tipoRelacion, idsArticulos);
         return ResponseEntity.ok(asignaciones);
     }
 
+
     @PostMapping("/reasignar-todos")
-    public ResponseEntity<List<ArticuloAsignacion>> reasignarArticulos(
+    public ResponseEntity<Map<String, Object>> reasignarArticulos(
             @RequestParam Long idUsuarioActual,
+            @RequestParam TipoRelacion tipoRelacionActual,
+            @RequestParam Long idUsuarioNuevo,
+            @RequestParam TipoRelacion tipoRelacionNuevo,
+            @RequestParam String descripcion) {
+        List<ArticuloAsignacion> reasignaciones = articuloAsignacionService.reasignarArticulosTodos(
+                idUsuarioActual, tipoRelacionActual, idUsuarioNuevo, tipoRelacionNuevo, descripcion);
+        return ResponseEntity.ok(
+                ApiResponse.buildResponse(
+                        EnumCodigos.ARCHIVO_SUBIDO_EXITO
+                )
+        );
+    }
+
+
+    @PostMapping("/reasignar-articulos")
+    public ResponseEntity<List<ArticuloAsignacion>> reasignarArticulos(
+            @RequestBody List<Long> idsArticulos,
             @RequestParam Long idUsuarioNuevo,
             @RequestParam String descripcion) {
-        List<ArticuloAsignacion> reasignaciones = articuloAsignacionService.reasignarArticulos(idUsuarioActual, idUsuarioNuevo, descripcion);
+        List<ArticuloAsignacion> reasignaciones = articuloAsignacionService.reasignarArticulos(idsArticulos, idUsuarioNuevo, descripcion);
         return ResponseEntity.ok(reasignaciones);
     }
 
-    @PostMapping("/reasignar-articulo")
-    public ResponseEntity<ArticuloAsignacion> reasignarArticulo(
-            @RequestParam Long idArticulo,
-            @RequestParam Long idUsuarioNuevo,
-            @RequestParam String descripcion) {
-        ArticuloAsignacion reasignacion = articuloAsignacionService.reasignarArticulo(idArticulo, idUsuarioNuevo, descripcion);
-        return ResponseEntity.ok(reasignacion);
-    }
 
     @GetMapping("/{id}/codigo-barras")
     @Operation(summary = "Generar código de barras", description = "Genera un código de barras para el artículo dado su ID")
@@ -200,7 +217,7 @@ public class ArticuloControlador {
 
     @PostMapping("/reporteArticulo/{id}")
     public ResponseEntity<byte[]> generarReporteArticulo(@PathVariable Long id) {
-        byte[] pdfReporte = articuloService.generarReporteArticuloCompleto(id);
+        var pdfReporte = articuloService.generarReporteArticuloCompleto(id);
         ArticuloDTO articuloDTO = articuloService.consultarArticulo(id);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
@@ -211,9 +228,28 @@ public class ArticuloControlador {
         return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
     }
 
+    @PostMapping("/reporteActaEntrega/{id}")
+    public ResponseEntity<byte[]> generarReporteActaEntrega(@PathVariable Long id) {
+        var pdfReporte = articuloService.generarReporteActaEntrega(id);
+        ArticuloDTO articuloDTO = articuloService.consultarArticulo(id);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(ContentDisposition.builder("attachment")
+                .filename("Reporte_Acta_Entrega"+articuloDTO.getCodigoInterno()+".pdf")
+                .build());
+
+        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
+    }
+
     @GetMapping("/articuloDetalle/{id}")
     @Operation(summary = "Obtener Modelo de articulo ", description = "Metodo para obtener el modelo completo del articulo")
     public ArticuloDetalleDTO consultarArticuloDetalle(@PathVariable Long id) {
         return articuloService.obtenerArticuloDetalle(id);
+    }
+
+    @GetMapping("/asignaciones")
+    @Operation(summary = "Obtener Asignaciones de articulos ", description = "Metodo para obtener Asignaciones")
+    public List<ArticuloAsignacionDTO> consultarAsignaciones() {
+        return articuloAsignacionService.obtenerAsignacionesConDetalles();
     }
 }

@@ -2,10 +2,13 @@ package com.facci.configuracion.servicio;
 
 import com.facci.configuracion.dominio.RolUsuario;
 import com.facci.configuracion.dominio.Usuario;
+import com.facci.configuracion.dto.UsuarioAreaDTO;
 import com.facci.configuracion.dto.UsuarioDTO;
 import com.facci.configuracion.enums.EnumCodigos;
+import com.facci.configuracion.enums.TipoRelacion;
 import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.map.UsuarioMapper;
+import com.facci.configuracion.repositorio.AreaRepositorio;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import com.facci.configuracion.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -27,6 +31,7 @@ public class UsuarioService {
     private final UsuarioRepositorio usuarioRepositorio;
     private final PasswordEncoder passwordEncoder;
     private UsuarioMapper usuarioMapper;
+    private final AreaRepositorio areaRepositorio;
 
     @Value("${spring.security.user.name}")
     private String adminUsername;
@@ -35,10 +40,11 @@ public class UsuarioService {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper) {
+    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper, AreaRepositorio areaRepositorio) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
+        this.areaRepositorio = areaRepositorio;
     }
 
     public ResponseEntity<?> registrar(UsuarioDTO usuarioDTO) {
@@ -132,6 +138,64 @@ public class UsuarioService {
             throw new CustomException(EnumCodigos.ERROR_CONSULTA_USUARIO);
         }
     }
+
+    public ResponseEntity<UsuarioAreaDTO> consultarUsuarioArea(long id, TipoRelacion tipoRelacion) {
+        UsuarioAreaDTO usuarioAreaDTO = new UsuarioAreaDTO();
+        usuarioAreaDTO.setTipoRelacion(tipoRelacion);
+
+        if (tipoRelacion == TipoRelacion.AREA){
+            var area = this.areaRepositorio.findById(id);
+            if (area.isEmpty()){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            usuarioAreaDTO.setId(area.get().getId());
+            usuarioAreaDTO.setNombre(area.get().getNombreArea());
+        }else{
+            var usuarioOp = this.usuarioRepositorio.findById(id);
+            if (usuarioOp.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+            usuarioAreaDTO.setId(usuarioOp.get().getId());
+            usuarioAreaDTO.setNombre(usuarioOp.get().getNombreCompleto());
+        }
+        try {
+            return ResponseEntity.ok(usuarioAreaDTO);
+        } catch (Exception e) {
+            String mensajeError = "Error al obtener el usuario con id: " + id;
+            log.error(mensajeError, e);
+            throw new CustomException(EnumCodigos.ERROR_CONSULTA_USUARIO);
+        }
+    }
+
+    public ResponseEntity<List<UsuarioAreaDTO>> consultarUsuarioAreaTodos() {
+        try {
+            List<UsuarioAreaDTO> resultado = new ArrayList<>();
+
+            this.areaRepositorio.findAll().forEach(area -> {
+                UsuarioAreaDTO dto = new UsuarioAreaDTO();
+                dto.setId(area.getId());
+                dto.setNombre(area.getNombreArea());
+                dto.setTipoRelacion(TipoRelacion.AREA);
+                resultado.add(dto);
+            });
+
+            this.usuarioRepositorio.findAll().forEach(usuario -> {
+                UsuarioAreaDTO dto = new UsuarioAreaDTO();
+                dto.setId(usuario.getId());
+                dto.setNombre(usuario.getNombreCompleto());
+                dto.setTipoRelacion(TipoRelacion.USUARIO);
+                resultado.add(dto);
+            });
+
+            return ResponseEntity.ok(resultado);
+
+        } catch (Exception e) {
+            String mensajeError = "Error al obtener áreas y usuarios.";
+            log.error(mensajeError, e);
+            throw new CustomException(EnumCodigos.ERROR_CONSULTA_USUARIO);
+        }
+    }
+
 
     public ResponseEntity<List<UsuarioDTO>> consultarTodos() {
         List<Usuario> usuarios = StreamSupport

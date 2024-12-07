@@ -4,10 +4,7 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.*;
-import com.facci.inventario.enums.EnumCodigos;
-import com.facci.inventario.enums.TipoArchivo;
-import com.facci.inventario.enums.TipoOperacion;
-import com.facci.inventario.enums.TipoRelacion;
+import com.facci.inventario.enums.*;
 import com.facci.inventario.handler.CustomException;
 import com.facci.inventario.map.ArticuloMapper;
 import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
@@ -85,7 +82,7 @@ public class ArticuloService {
             log.error("No se encontró información del usuario en el servicio de configuración para '{}'.", usuario);
             throw new CustomException(EnumCodigos.USUARIO_ASIGNAR_EN_SESION);
         }
-        articuloHistorialService.registrarEvento(articuloGuardado, TipoOperacion.INGRESO, TipoOperacion.INGRESO + " " + articuloGuardado.getObservacion());
+        articuloHistorialService.registrarEvento(articuloGuardado, TipoOperacion.INGRESO, TipoOperacion.INGRESO + " " + articuloGuardado.getObservacion(),usuarioSesion);
         articuloAsignacionService.asignarArticulos(
                 usuarioSesion.getId(),
                 TipoRelacion.USUARIO,
@@ -102,8 +99,12 @@ public class ArticuloService {
 
         articuloExistente.setNombre(articuloDTO.getNombre());
         articuloExistente.setDescripcion(articuloDTO.getDescripcion());
+        articuloExistente.setEstado(articuloDTO.getEstado());
+        articuloExistente.setMarca(articuloDTO.getMarca());
+        articuloExistente.setObservacion(articuloDTO.getObservacion());
         Articulo articuloActualizado = articuloRepositorio.save(articuloExistente);
-        articuloHistorialService.registrarEvento(articuloActualizado, TipoOperacion.ACTUALIZACION, null);
+        UsuarioDTO usuarioDTO = usuarioSesionService.usuarioCompleto();
+        articuloHistorialService.registrarEvento(articuloActualizado, TipoOperacion.ACTUALIZACION, null,usuarioDTO);
 
         log.info("Artículo actualizado por usuario: {}", articuloActualizado.getNombre());
         return articuloMapper.mapToDto(articuloActualizado);
@@ -128,13 +129,28 @@ public class ArticuloService {
     }
 
     public List<ArticuloDTO> consultarTodos() {
-        List<Articulo> articulos = StreamSupport.stream(articuloRepositorio.findAll().spliterator(), false)
-                .collect(Collectors.toList());
-        log.info("Artículos consultados: {}", articulos.size());
-        return articulos.stream()
-                .map(articuloMapper::mapToDto)
-                .collect(Collectors.toList());
+        List<EnumRolUsuario> roles = usuarioSesionService.obtenerRolesActuales();
+
+        if (roles.contains(EnumRolUsuario.ADMINISTRADOR)) {
+            List<Articulo> articulos = StreamSupport.stream(articuloRepositorio.findAll().spliterator(), false)
+                    .collect(Collectors.toList());
+            log.info("Artículos consultados (ADMINISTRADOR): {}", articulos.size());
+            return articulos.stream()
+                    .map(articuloMapper::mapToDto)
+                    .collect(Collectors.toList());
+        } else {
+            log.info("Consulta restringida para roles: {}", roles);
+            List<Long> idsArticulosAsignados = articuloAsignacionService.obtenerIdsArticulosAsignadosAlUsuario();
+            List<Articulo> articulos = StreamSupport.stream(articuloRepositorio.findAllById(idsArticulosAsignados).spliterator(), false)
+                    .collect(Collectors.toList());
+            log.info("Artículos consultados para el usuario en sesión: {}", articulos.size());
+
+            return articulos.stream()
+                    .map(articuloMapper::mapToDto)
+                    .collect(Collectors.toList());
+        }
     }
+
 
     public byte[] generarCodigoBarra(Long articuloId) {
         Articulo articulo = articuloRepositorio.findById(articuloId)
@@ -354,6 +370,25 @@ public class ArticuloService {
         return datos;
     }
 
+    private List<Map<String, Object>> crearDatosPrincipalesActaEntrega(ArticuloDetalleDTO detalleDTO, InputStream logoStream, InputStream codigoBarraStream) {
+        ArticuloDTO articuloDTO = detalleDTO.getArticulo();
+
+        var usuarioAsigna = usuarioSesionService.usuarioCompleto();
+        UsuarioDTO usuarioDTO = detalleDTO.getUsuarioAsignado();
+
+        List<Map<String, Object>> datos = new ArrayList<>();
+        Map<String, Object> item = new HashMap<>();
+        item.put("codigoBarra", codigoBarraStream);
+        item.put("codigoInterno", articuloDTO.getCodigoInterno());
+        item.put("codigoOrigen", articuloDTO.getCodigoOrigen());
+        item.put("usuarioAsignado", usuarioDTO.getNombreCompleto());
+        item.put("usuarioEntrega", usuarioAsigna.getNombreCompleto());
+        item.put("nombreArticulo", articuloDTO.getNombre());
+        item.put("logo", logoStream);
+        datos.add(item);
+
+        return datos;
+    }
     public List<Map<String, Object>> cargarArchivos(Long articuloId, TipoArchivo tipoArchivo) {
         return articuloArchivoRepositorio.findByArticuloIdAndTipo(articuloId, tipoArchivo).stream()
                 .map(archivo -> {
@@ -412,4 +447,18 @@ public class ArticuloService {
         }
     }
 
+
+    public byte[] generarReporteActaEntrega(Long articuloId) {
+        ArticuloDetalleDTO detalleDTO = obtenerDetalleArticulo(articuloId);
+
+        InputStream logoStream = obtenerLogoStream();
+        InputStream codigoBarraStream = generarCodigoBarraReporte(articuloId);
+
+        List<Map<String, Object>> datos = crearDatosPrincipalesActaEntrega(detalleDTO, logoStream, codigoBarraStream);
+
+        Map<String, Object> parameters = new HashMap<>();
+
+
+        return generarPDFReporte("/reportes/ReporteActaEntrega.jasper", parameters, datos);
+    }
 }

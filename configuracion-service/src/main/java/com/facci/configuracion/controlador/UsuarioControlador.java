@@ -1,6 +1,8 @@
 package com.facci.configuracion.controlador;
 
+import com.facci.configuracion.dto.UsuarioAreaDTO;
 import com.facci.configuracion.dto.UsuarioDTO;
+import com.facci.configuracion.enums.TipoRelacion;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,5 +56,11 @@ public class UsuarioControlador {
     public ResponseEntity<UsuarioDTO> buscarPorNombreUsuario(@PathVariable("nombreUsuario") String nombreUsuario) {
         var usuario = usuarioService.listarPorNombreUsuario(nombreUsuario);
         return ResponseEntity.ok(usuario);
+    }
+
+    @GetMapping("usuarioArea")
+    @Operation(summary = "Consultar Usuario-Areas", description = "Obtiene un usuario registrado en el sistema")
+    public ResponseEntity <List<UsuarioAreaDTO>>consultarUsuarioArea() {
+        return usuarioService.consultarUsuarioAreaTodos();
     }
 }

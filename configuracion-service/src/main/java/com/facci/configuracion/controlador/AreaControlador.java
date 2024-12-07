@@ -65,4 +65,5 @@ public class AreaControlador {
         Area area = areaService.consultarArea(id);
         return ResponseEntity.ok(area);
     }
+
 }
