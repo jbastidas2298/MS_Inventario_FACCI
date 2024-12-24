@@ -19,4 +19,5 @@ public class ArticuloDTO {
     private String marca;
     private EstadoArticulo estado;
     private String observacion;
+    private boolean asignarseArticulo;
 }

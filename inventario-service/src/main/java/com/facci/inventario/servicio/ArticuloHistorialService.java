@@ -8,6 +8,8 @@ import com.facci.inventario.repositorio.ArticuloHistorialRepositorio;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 public class ArticuloHistorialService {
@@ -19,35 +21,29 @@ public class ArticuloHistorialService {
     }
 
     public void registrarEvento(Articulo articulo, TipoOperacion tipoOperacion, String descripcion, UsuarioDTO usuarioDTO) {
-        String descripcionN;
-        if(descripcion == null){
-            descripcionN = generarDescripcion(tipoOperacion, articulo, usuarioDTO);
-        }else{
-            descripcionN = descripcion;
-        }
+        String descripcionFinal = Optional.ofNullable(descripcion)
+                .orElseGet(() -> generarDescripcion(tipoOperacion, articulo, usuarioDTO));
+
         log.info("Registrando evento para artículo con ID {} y operación {}", articulo.getId(), tipoOperacion);
+
         ArticuloHistorial historial = ArticuloHistorial.builder()
                 .idArticulo(articulo.getId())
                 .codigoInterno(articulo.getCodigoInterno())
                 .tipoOperacion(tipoOperacion)
-                .descripcion(descripcionN)
+                .descripcion(descripcionFinal)
                 .build();
+
         articuloHistorialRepositorio.save(historial);
     }
-    private String generarDescripcion(TipoOperacion tipoOperacion, Articulo articulo,UsuarioDTO usuarioDTO) {
-        switch (tipoOperacion) {
-            case INGRESO:
-                return "Se ingresó un nuevo artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario "+ usuarioDTO.getNombreCompleto();
-            case ACTUALIZACION:
-                return "Se actualizó el artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario "+ usuarioDTO.getNombreCompleto();
-            case ASIGNACION:
-                return "Se asignó el artículo con código interno: " + articulo.getCodigoInterno() + " a "+ usuarioDTO.getNombreCompleto();
-            case REASIGNACION:
-                return "Se reasigno el artículo con código interno: " + articulo.getCodigoInterno() + " a "+ usuarioDTO.getNombreCompleto();
-            case ELIMINACION:
-                return "Se eliminó el artículo código interno: " + articulo.getCodigoInterno();
-            default:
-                return "Operación no especificada código interno: " + articulo.getCodigoInterno();
-        }
+
+    private String generarDescripcion(TipoOperacion tipoOperacion, Articulo articulo, UsuarioDTO usuarioDTO) {
+        return switch (tipoOperacion) {
+            case INGRESO -> "Se ingresó un nuevo artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();
+            case ACTUALIZACION -> "Se actualizó el artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();
+            case ASIGNACION -> "Se asignó el artículo con código interno: " + articulo.getCodigoInterno() + " a " + usuarioDTO.getNombreCompleto();
+            case REASIGNACION -> "Se reasignó el artículo con código interno: " + articulo.getCodigoInterno() + " a " + usuarioDTO.getNombreCompleto();
+            case ELIMINACION -> "Se eliminó el artículo con código interno: " + articulo.getCodigoInterno();
+            default -> "Operación no especificada para el artículo con código interno: " + articulo.getCodigoInterno();
+        };
     }
 }

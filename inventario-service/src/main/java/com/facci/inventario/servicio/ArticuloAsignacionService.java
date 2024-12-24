@@ -42,35 +42,48 @@ public class ArticuloAsignacionService {
     public List<ArticuloAsignacionDTO> asignarArticulos(Long idRelacionado, TipoRelacion tipoRelacion, List<Long> idsArticulos) {
         return idsArticulos.stream()
                 .map(idArticulo -> {
-                    ArticuloAsignacion asignacionExistente = articuloAsignacionRepositorio.findByArticuloId(idArticulo)
-                            .orElseThrow(() -> new RuntimeException("No se encontró una asignación para el artículo con ID: " + idArticulo));
+                    ArticuloAsignacion asignacion = articuloAsignacionRepositorio.findByArticuloId(idArticulo)
+                            .orElseGet(() -> {
+                                Articulo articulo = articuloRepositorio.findById(idArticulo)
+                                        .orElseThrow(() -> new RuntimeException("No se encontró el artículo con ID: " + idArticulo));
 
-                    asignacionExistente.setIdUsuario(idRelacionado);
-                    asignacionExistente.setTipoRelacion(tipoRelacion);
-                    asignacionExistente.setFechaAsignacion(LocalDateTime.now());
-                    var usuarioArea = configuracionService.consultarUsuarioArea(idRelacionado,tipoRelacion);
+                                ArticuloAsignacion nuevaAsignacion = new ArticuloAsignacion();
+                                nuevaAsignacion.setArticulo(articulo);
+                                nuevaAsignacion.setIdUsuario(idRelacionado);
+                                nuevaAsignacion.setTipoRelacion(tipoRelacion);
+                                nuevaAsignacion.setFechaAsignacion(LocalDateTime.now());
+
+                                return articuloAsignacionRepositorio.save(nuevaAsignacion);
+                            });
+
+                    asignacion.setIdUsuario(idRelacionado);
+                    asignacion.setTipoRelacion(tipoRelacion);
+                    asignacion.setFechaAsignacion(LocalDateTime.now());
+
+                    var usuarioArea = configuracionService.consultarUsuarioArea(idRelacionado, tipoRelacion);
                     UsuarioDTO usuarioDTO = new UsuarioDTO();
                     usuarioDTO.setNombreCompleto(usuarioArea.getNombre());
                     usuarioDTO.setId(usuarioArea.getId());
 
-                    articuloHistorialService.registrarEvento(asignacionExistente.getArticulo(), TipoOperacion.REASIGNACION, null, usuarioDTO);
+                    articuloHistorialService.registrarEvento(asignacion.getArticulo(), TipoOperacion.REASIGNACION, null, usuarioDTO);
 
-                    articuloAsignacionRepositorio.save(asignacionExistente);
+                    articuloAsignacionRepositorio.save(asignacion);
 
-                    Articulo articulo = asignacionExistente.getArticulo();
+                    Articulo articulo = asignacion.getArticulo();
                     ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
-                    dto.setIdUsuario(asignacionExistente.getIdUsuario());
+                    dto.setIdUsuario(asignacion.getIdUsuario());
                     dto.setNombreAsignado(usuarioArea.getNombre());
                     dto.setIdArticulo(articulo.getId());
                     dto.setCodigoInterno(articulo.getCodigoInterno());
                     dto.setCodigoOrigen(articulo.getCodigoOrigen());
-                    dto.setFechaAsignacion(asignacionExistente.getFechaAsignacion());
-                    dto.setTipoRelacion(asignacionExistente.getTipoRelacion());
+                    dto.setFechaAsignacion(asignacion.getFechaAsignacion());
+                    dto.setTipoRelacion(asignacion.getTipoRelacion());
 
                     return dto;
                 })
                 .collect(Collectors.toList());
     }
+
 
 
 

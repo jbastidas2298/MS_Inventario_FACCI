@@ -67,93 +67,15 @@ public class ArticuloControlador {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Consultar artículo por ID", description = "Obtiene un artículo registrado en el sistema")
+    @Operation(summary = "Consultar artículo por ID", description = "Obtiene un artículo registrado en el sistema mediante su ID")
     public ResponseEntity<ArticuloDTO> consultarArticulo(@PathVariable Long id) {
         ArticuloDTO articulo = articuloService.consultarArticulo(id);
         return ResponseEntity.ok(articulo);
     }
 
-    @PostMapping("/{id}/imagen")
-    public ResponseEntity<Map<String, Object>> subirImagen(@PathVariable Long id, @RequestParam("imagen") MultipartFile file) {
-        try {
-            String imagePath = archivoService.guardarImagen(id, file);
-            return ResponseEntity.ok(
-                    ApiResponse.buildResponse(
-                            EnumCodigos.ARCHIVO_SUBIDO_EXITO
-                    )
-            );
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
-        }
-    }
-
-
-
-    @PostMapping("/{id}/pdf")
-    public ResponseEntity<Map<String, Object>> subirPdf(@PathVariable Long id, @RequestParam("pdf") MultipartFile file) {
-        try {
-            String pdfPath = archivoService.guardarPdf(id, file);
-            return ResponseEntity.ok(
-                    ApiResponse.buildResponse(
-                            EnumCodigos.ARCHIVO_SUBIDO_EXITO
-                    )
-            );
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error interno: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/archivo/descargar")
-    public ResponseEntity<Resource> descargarArchivo(@RequestBody String path) {
-        try {
-            if (path == null || path.isEmpty()) {
-                throw new CustomException(EnumCodigos.PATH_INVALIDO);
-            }
-
-            Resource file = archivoService.obtenerArchivo(path);
-            String fileName = Paths.get(path).getFileName().toString();
-            String contentType = Files.probeContentType(Paths.get(path));
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .body(file);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
-
-    @PostMapping("/archivo/ver")
-    public ResponseEntity<Resource> visualizarArchivo(@RequestBody String path) {
-        try {
-            if (path == null || path.isEmpty()) {
-                throw new CustomException(EnumCodigos.PATH_INVALIDO);
-            }
-
-            Resource file = archivoService.obtenerArchivo(path);
-            String fileName = Paths.get(path).getFileName().toString();
-            String contentType = Files.probeContentType(Paths.get(path));
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName + "\"") // inline permite visualizar
-                    .body(file);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-    }
 
     @PostMapping("/asignar")
+    @Operation(summary = "Asignar artículos", description = "Permite asignar múltiples artículos a una relación específica")
     public ResponseEntity<List<ArticuloAsignacionDTO>> asignarArticulos(
             @RequestParam Long idRelacionado,
             @RequestParam TipoRelacion tipoRelacion,
@@ -162,8 +84,8 @@ public class ArticuloControlador {
         return ResponseEntity.ok(asignaciones);
     }
 
-
     @PostMapping("/reasignar-todos")
+    @Operation(summary = "Reasignar todos los artículos", description = "Permite reasignar todos los artículos de un usuario a otro con una nueva relación")
     public ResponseEntity<Map<String, Object>> reasignarArticulos(
             @RequestParam Long idUsuarioActual,
             @RequestParam TipoRelacion tipoRelacionActual,
@@ -179,8 +101,8 @@ public class ArticuloControlador {
         );
     }
 
-
     @PostMapping("/reasignar-articulos")
+    @Operation(summary = "Reasignar artículos específicos", description = "Permite reasignar una lista específica de artículos a un nuevo usuario")
     public ResponseEntity<List<ArticuloAsignacion>> reasignarArticulos(
             @RequestBody List<Long> idsArticulos,
             @RequestParam Long idUsuarioNuevo,
@@ -190,65 +112,14 @@ public class ArticuloControlador {
     }
 
 
-    @GetMapping("/{id}/codigo-barras")
-    @Operation(summary = "Generar código de barras", description = "Genera un código de barras para el artículo dado su ID")
-    public ResponseEntity<byte[]> generarCodigoBarra(@PathVariable Long id) {
-        byte[] codigoBarras = articuloService.generarCodigoBarra(id);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_PNG);
-        headers.setContentLength(codigoBarras.length);
-
-        return new ResponseEntity<>(codigoBarras, headers, HttpStatus.OK);
-    }
-
-    @PostMapping("/codigo-barras/reporte")
-    public ResponseEntity<byte[]> generarReporteCodigosBarra(@RequestBody List<Long> articuloIds) {
-        byte[] pdfReporte = articuloService.generarReporteCodigosBarra(articuloIds);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename("reporte_codigos_barras.pdf")
-                .build());
-
-        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
-    }
-
-    @PostMapping("/reporteArticulo/{id}")
-    public ResponseEntity<byte[]> generarReporteArticulo(@PathVariable Long id) {
-        var pdfReporte = articuloService.generarReporteArticuloCompleto(id);
-        ArticuloDTO articuloDTO = articuloService.consultarArticulo(id);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename("Reporte_"+articuloDTO.getCodigoInterno()+".pdf")
-                .build());
-
-        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
-    }
-
-    @PostMapping("/reporteActaEntrega/{id}")
-    public ResponseEntity<byte[]> generarReporteActaEntrega(@PathVariable Long id) {
-        var pdfReporte = articuloService.generarReporteActaEntrega(id);
-        ArticuloDTO articuloDTO = articuloService.consultarArticulo(id);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition.builder("attachment")
-                .filename("Reporte_Acta_Entrega"+articuloDTO.getCodigoInterno()+".pdf")
-                .build());
-
-        return new ResponseEntity<>(pdfReporte, headers, HttpStatus.OK);
-    }
-
     @GetMapping("/articuloDetalle/{id}")
-    @Operation(summary = "Obtener Modelo de articulo ", description = "Metodo para obtener el modelo completo del articulo")
+    @Operation(summary = "Consultar detalles de un artículo", description = "Obtiene todos los detalles de un artículo mediante su ID")
     public ArticuloDetalleDTO consultarArticuloDetalle(@PathVariable Long id) {
         return articuloService.obtenerArticuloDetalle(id);
     }
 
     @GetMapping("/asignaciones")
-    @Operation(summary = "Obtener Asignaciones de articulos ", description = "Metodo para obtener Asignaciones")
+    @Operation(summary = "Consultar asignaciones", description = "Obtiene una lista detallada de todas las asignaciones de artículos")
     public List<ArticuloAsignacionDTO> consultarAsignaciones() {
         return articuloAsignacionService.obtenerAsignacionesConDetalles();
     }
