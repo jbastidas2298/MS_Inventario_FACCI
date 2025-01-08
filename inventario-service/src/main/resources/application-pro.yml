@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=inventario_facci_service;encrypt=true;trustServerCertificate=true
+    url: jdbc:sqlserver://host.docker.internal:1433;databaseName=facci_inventario;encrypt=true;trustServerCertificate=true
     username: sa
-    password: Alt!ora2015
+    password: realhulk97
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     hibernate:
@@ -16,6 +16,15 @@ logging:
     root: INFO
     com.facci: DEBUG
   file:
-    name: /var/logs/inventario-service.log
+    name: inventario-service/logs/inventario-service.log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+jwt:
+  secret: $2a$10$5Kndd1j0JbfdAFSuU0GTkO4PradBmrcPfMhD1u8kMkJdxP75k7n.O
+  expiration: 86400000
+
+articulo:
+  carpeta-archivos: /archivos/
+
+configuracion-service:
+  url: http://configuracion-service:8099

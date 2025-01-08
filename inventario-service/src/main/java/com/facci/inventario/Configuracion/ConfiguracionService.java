@@ -4,6 +4,7 @@ import com.facci.inventario.dto.UsuarioAreaDTO;
 import com.facci.inventario.dto.UsuarioDTO;
 import com.facci.inventario.enums.TipoRelacion;
 import com.facci.inventario.servicio.UsuarioSesionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ConfiguracionService {
 
@@ -32,6 +34,7 @@ public class ConfiguracionService {
     }
 
     public UsuarioDTO consultarUsuario(Long id) {
+        log.info("Consultando usuario a configuracion");
         String url = configuracionServiceUrl + "/configuraciones/" + id;
         String token = obtenerTokenActual().orElseThrow(() -> new RuntimeException("No se encontró un token en la sesión actual"));
 

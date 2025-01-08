@@ -6,8 +6,10 @@ import com.facci.configuracion.enums.TipoRelacion;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -62,5 +64,17 @@ public class UsuarioControlador {
     @Operation(summary = "Consultar Usuario-Areas", description = "Obtiene un usuario registrado en el sistema")
     public ResponseEntity <List<UsuarioAreaDTO>>consultarUsuarioArea() {
         return usuarioService.consultarUsuarioAreaTodos();
+    }
+
+    @PostMapping("/importar-excel")
+    @Operation(summary = "Usuario Excel", description = "Importa masivamente usuario desde formato excel")
+    public ResponseEntity<List<UsuarioDTO>> importarExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            var usuariosProcesados= usuarioService.procesarExcel(file);
+            return ResponseEntity.ok(usuariosProcesados);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
     }
 }

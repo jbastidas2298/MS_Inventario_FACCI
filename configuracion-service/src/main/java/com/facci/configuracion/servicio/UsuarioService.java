@@ -5,6 +5,7 @@ import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.UsuarioAreaDTO;
 import com.facci.configuracion.dto.UsuarioDTO;
 import com.facci.configuracion.enums.EnumCodigos;
+import com.facci.configuracion.enums.EnumRolUsuario;
 import com.facci.configuracion.enums.TipoRelacion;
 import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.map.UsuarioMapper;
@@ -12,6 +13,9 @@ import com.facci.configuracion.repositorio.AreaRepositorio;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import com.facci.configuracion.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +23,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -225,5 +231,90 @@ public class UsuarioService {
         }
         var usuario = this.usuarioMapper.mapToDto(usuarioOp.get());
         return usuario;
+    }
+
+    public List<UsuarioDTO> procesarExcel(MultipartFile file) throws Exception {
+        List<UsuarioDTO> usuarioDTOS = new ArrayList<>();
+        if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
+            throw new IllegalArgumentException("El archivo no es un Excel válido.");
+        }
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            XSSFSheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                String nombreCompleto = row.getCell(0).getStringCellValue();
+                String correo = row.getCell(1).getStringCellValue();
+
+                String nombreUsuario = generarNombreUsuario(nombreCompleto);
+
+                String contrasena = generarContrasena();
+
+                UsuarioDTO usuarioDTO = new UsuarioDTO(
+                        nombreCompleto,
+                        nombreUsuario,
+                        correo,
+                        contrasena,
+                        false,
+                        EnumRolUsuario.DOCENTE
+                );
+                registrarUsuario(usuarioDTO);
+                usuarioDTOS.add(usuarioDTO);
+            }
+        }
+        return usuarioDTOS;
+    }
+
+    private String generarNombreUsuario(String nombreCompleto) {
+        String[] nombres = nombreCompleto.split(" ");
+
+        String primerNombre = nombres[0].toLowerCase();
+        String primerApellido = nombres[2].toLowerCase();
+
+        String nombreUsuario = "";
+        String baseUsuario = "";
+        for (int i = 1; i <= primerNombre.length(); i++) {
+            String letrasNombre = primerNombre.substring(0, i);
+            baseUsuario = letrasNombre + primerApellido;
+
+            if (!usuarioRepositorio.findByNombreUsuario(baseUsuario).isPresent()) {
+                return baseUsuario;
+            }
+        }
+        int contador = 1;
+        nombreUsuario = baseUsuario;
+        while (usuarioRepositorio.findByNombreUsuario(nombreUsuario).isPresent()) {
+            nombreUsuario = baseUsuario + contador;
+            contador++;
+        }
+
+        return nombreUsuario;
+    }
+
+
+    private String generarContrasena() {
+        int longitud = 8;
+        String caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(longitud);
+        for (int i = 0; i < longitud; i++) {
+            sb.append(caracteres.charAt(random.nextInt(caracteres.length())));
+        }
+        return sb.toString();
+    }
+
+    private void registrarUsuario(UsuarioDTO usuarioDTO) {
+        if (usuarioRepositorio.findByNombreUsuario(usuarioDTO.getNombreUsuario()).isPresent()) {
+            throw new RuntimeException("El usuario ya existe: " + usuarioDTO.getNombreUsuario());
+        }
+
+        String encryptedPassword = passwordEncoder.encode(usuarioDTO.getContrasena());
+        usuarioDTO.setContrasena(encryptedPassword);
+
+        Usuario nuevoUsuario = new Usuario(usuarioDTO);
+        usuarioRepositorio.save(nuevoUsuario);
     }
 }

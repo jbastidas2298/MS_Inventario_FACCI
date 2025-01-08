@@ -44,12 +44,12 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-@Slf4j
 
+@Slf4j
 @Service
 public class ArchivoService {
 
-    @Value("${articulo.carpeta-imagenes}")
+    @Value("${articulo.carpeta-archivos}")
     private String BASE_FOLDER;
 
     private final ArticuloArchivoRepositorio articuloArchivoRepositorio;
@@ -305,6 +305,8 @@ public class ArchivoService {
     }
 
     public byte[] generarReporteArticulo(Long articuloId) {
+        log.info("Generando reporte");
+
         ArticuloDetalleDTO detalleDTO = obtenerDetalleArticulo(articuloId);
         List<Map<String, Object>> historialData = obtenerHistorialData(articuloId);
 
@@ -323,14 +325,19 @@ public class ArchivoService {
     }
 
     private byte[] generarPDFReporte(String reportePath, Map<String, Object> parameters, List<Map<String, Object>> datos) {
+        log.info("Generando reporte PDF para el path {}", reportePath);
         try (InputStream inputStream = getClass().getResourceAsStream(reportePath);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
+            log.info("Validando reporte {}", reportePath);
+            if (inputStream == null) {
+                log.error("No se encontró el archivo Jasper en la ruta: {}", reportePath);
+                throw new CustomException(EnumCodigos.REPORTE_NO_ENCONTRADO);
+            }
+            log.info("Validando fillReport {}", reportePath);
             JRDataSource dataSource = new JRBeanCollectionDataSource(datos);
             JasperPrint jasperPrint = JasperFillManager.fillReport(inputStream, parameters, dataSource);
-
+            log.info("Validando exportReportToPdfStream {}", reportePath);
             JasperExportManager.exportReportToPdfStream(jasperPrint, outputStream);
-
             return outputStream.toByteArray();
         } catch (JRException | IOException e) {
             log.error("Error al generar el reporte del artículo", e);
@@ -339,6 +346,7 @@ public class ArchivoService {
     }
 
     private ArticuloDetalleDTO obtenerDetalleArticulo(Long articuloId) {
+        log.info("Obteniendo detalle de articulo");
         ArticuloDetalleDTO detalleDTO = new ArticuloDetalleDTO();
         Articulo articulo = articuloRepositorio.findById(articuloId)
                 .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
@@ -346,6 +354,7 @@ public class ArchivoService {
 
 
         articuloAsignacionRepositorio.findByArticuloId(articuloId).ifPresent(asignacion -> {
+            log.info("Consultando usuario a configuracion");
             UsuarioDTO usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
             detalleDTO.setUsuarioAsignado(usuarioDTO);
         });
@@ -407,6 +416,7 @@ public class ArchivoService {
         return datos;
     }
     public List<Map<String, Object>> cargarArchivos(Long articuloId, TipoArchivo tipoArchivo) {
+        log.info("Consultando imgenes para articulo");
         return articuloArchivoRepositorio.findByArticuloIdAndTipo(articuloId, tipoArchivo).stream()
                 .map(archivo -> {
                     Map<String, Object> map = new HashMap<>();
@@ -427,6 +437,7 @@ public class ArchivoService {
     }
 
     public List<InputStream> cargarPDFs(Long articuloId) {
+        log.info("Consultando pdf de articulo");
         return articuloArchivoRepositorio.findByArticuloIdAndTipo(articuloId, TipoArchivo.PDF).stream()
                 .map(archivo -> {
                     File pdfFile = new File(archivo.getPath());

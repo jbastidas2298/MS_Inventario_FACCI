@@ -1,43 +1,49 @@
 server:
   port: 8097
+  ssl:
+    enabled: true
+    key-store: classpath:certificados/keystore.p12
+    key-store-password: realhulk97
+    key-store-type: PKCS12
 spring:
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "https://192.168.10.109:4200"
+              - "https://192.168.10.109"
+              - "https://192.168.10.109/"
+            allowedHeaders:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
       routes:
-        # Ruta específica para login en configuracion-service (acceso sin token)
-        - id: configuracion-service-login
-          uri: http://localhost:8081
-          predicates:
-            - Path=/login
-          filters:
-            - RemoveRequestHeader=Authorization # Opcional: elimina el header de autorización para esta ruta
-
-        # Rutas protegidas para todas las demás APIs en configuracion-service
-        - id: configuracion-service-protected
-          uri: http://localhost:8081
+        - id: configuracion-service
+          uri: http://configuracion-service:8099
           predicates:
             - Path=/configuracion/**
-          filters:
-            - TokenRelay # Reenvía el token si es válido
-
-        # Rutas protegidas para todas las APIs en inventario-service
         - id: inventario-service
-          uri: http://localhost:8082
+          uri: http://inventario-service:8098
           predicates:
             - Path=/inventario/**
-          filters:
-            - TokenRelay # Reenvía el token si es válido
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8097/auth
 logging:
   level:
     root: INFO
     com.facci: DEBUG
+    org.springframework.security: DEBUG
   file:
-    name: /var/logs/gateway-service.log
+    name: gateway-service/logs/gateway-service.log
   pattern:
     file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+jwt:
+  secret: $2a$10$5Kndd1j0JbfdAFSuU0GTkO4PradBmrcPfMhD1u8kMkJdxP75k7n.O
+  expiration: 86400000
+cors:
+  allowed-origins: "http://192.168.10.109"
