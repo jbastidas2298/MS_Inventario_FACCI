@@ -1,9 +1,9 @@
 package com.facci.inventario.controlador;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.handler.CustomException;
+import com.facci.comun.response.ApiResponse;
 import com.facci.inventario.dto.ArticuloDTO;
-import com.facci.inventario.enums.EnumCodigos;
-import com.facci.inventario.handler.CustomException;
-import com.facci.inventario.response.ApiResponse;
 import com.facci.inventario.servicio.ArchivoService;
 import com.facci.inventario.servicio.ArticuloService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -164,6 +164,18 @@ public class ArchivoControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @PostMapping("/importar-excel")
+    @Operation(summary = "Articulos Excel", description = "Importa masivamente articulos desde formato excel")
+    public ResponseEntity<List<ArticuloDTO>> importarExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            var usuariosProcesados= archivoService.procesarExcel(file);
+            return ResponseEntity.ok(usuariosProcesados);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 }

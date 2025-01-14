@@ -1,4 +1,5 @@
-include 'inventario-service'
+include 'comun'
 include 'configuracion-service'
 include 'gateway-service'
+include 'inventario-service'
 rootProject.name = 'MS_Inventario_FACCI'

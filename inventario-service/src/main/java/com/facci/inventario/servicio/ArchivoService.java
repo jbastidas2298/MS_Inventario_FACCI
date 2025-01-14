@@ -1,13 +1,14 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloArchivo;
-import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.*;
-import com.facci.inventario.enums.EnumCodigos;
+import com.facci.inventario.enums.EstadoArticulo;
+import com.facci.inventario.enums.GrupoActivo;
 import com.facci.inventario.enums.TipoArchivo;
-import com.facci.inventario.handler.CustomException;
 import com.facci.inventario.map.ArticuloMapper;
 import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
@@ -22,10 +23,15 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.kernel.utils.PdfMerger;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -59,8 +65,9 @@ public class ArchivoService {
     private final ArticuloHistorialRepositorio articuloHistorialRepositorio;
     private final ArticuloAsignacionRepositorio articuloAsignacionRepositorio;
     private final ConfiguracionService configuracionService;
+    private final ArticuloService articuloService;
 
-    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService) {
+    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService) {
         this.articuloArchivoRepositorio = articuloArchivoRepositorio;
         this.articuloRepositorio = articuloRepositorio;
         this.usuarioSesionService = usuarioSesionService;
@@ -68,6 +75,7 @@ public class ArchivoService {
         this.articuloHistorialRepositorio = articuloHistorialRepositorio;
         this.articuloAsignacionRepositorio = articuloAsignacionRepositorio;
         this.configuracionService = configuracionService;
+        this.articuloService = articuloService;
     }
 
     public String guardarImagen(Long idArticulo, MultipartFile file) {
@@ -489,4 +497,80 @@ public class ArchivoService {
 
         return generarPDFReporte("/reportes/ReporteActaEntrega.jasper", parameters, datos);
     }
+
+    @Transactional
+    public List<ArticuloDTO> procesarExcel(MultipartFile file) throws Exception {
+        List<ArticuloDTO> articuloDTOS = new ArrayList<>();
+        if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
+            throw new IllegalArgumentException("El archivo no es un Excel válido.");
+        }
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
+            XSSFSheet sheet = workbook.getSheetAt(0);
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+
+                try {
+                    ArticuloDTO articuloDTO = new ArticuloDTO();
+                    articuloDTO.setAsignarseArticulo(false);
+
+                    articuloDTO.setUbicacion(getCellValueAsString(row.getCell(0)));
+                    articuloDTO.setSeccion(getCellValueAsString(row.getCell(1)));
+                    String grupoActivoValue = getCellValueAsString(row.getCell(2)).toUpperCase().replace(" ", "_");
+                    articuloDTO.setGrupoActivo(GrupoActivo.valueOf(grupoActivoValue));
+                    articuloDTO.setNombre(getCellValueAsString(row.getCell(3)));
+                    articuloDTO.setMarca(getCellValueAsString(row.getCell(4)));
+                    articuloDTO.setModelo(getCellValueAsString(row.getCell(5)));
+                    articuloDTO.setSerie(getCellValueAsString(row.getCell(6)));
+                    String estadoValue = getCellValueAsString(row.getCell(7));
+                    switch (estadoValue) {
+                        case "B":
+                            articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
+                            break;
+                        case "M":
+                            articuloDTO.setEstado(EstadoArticulo.REVISION_TECNICA);
+                            break;
+                        default:
+                            articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
+                            break;
+                    }
+
+                    articuloService.registrar(articuloDTO);
+                    articuloDTOS.add(articuloDTO);
+
+                } catch (Exception e) {
+                    log.error("Error procesando la fila " + (i + 1) + ": " + e.getMessage());
+                }
+            }
+        }
+        return articuloDTOS;
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue().trim();
+            case NUMERIC:
+                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
+                    return cell.getDateCellValue().toString();
+                } else {
+                    return String.valueOf((int) cell.getNumericCellValue());
+                }
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
+                return cell.getCellFormula();
+            case BLANK:
+                return "";
+            default:
+                throw new IllegalArgumentException("Tipo de celda no soportado: " + cell.getCellType());
+        }
+    }
+
+
 }

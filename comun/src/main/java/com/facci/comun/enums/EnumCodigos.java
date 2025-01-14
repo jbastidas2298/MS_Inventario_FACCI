@@ -1,6 +1,17 @@
-package com.facci.inventario.enums;
+package com.facci.comun.enums;
 
 public enum EnumCodigos {
+    //Usuario
+    USUARIO_YA_EXISTE("EC001", "El usuario ya existe."),
+    AREA_YA_EXISTE("EC002", "El área ya existe."),
+    USUARIO_NO_ENCONTRADO("EC003", "Usuario no encontrado."),
+    AREA_NO_ENCONTRADA("EC004", "Área no encontrada."),
+    ERROR_INICIO("EC005", "Inicio no Autorizado"),
+    ERROR_CREDENCIALES("EC006", "Credenciales incorrectas. Verifica tu nombre de usuario y contraseña."),
+    USUARIO_ELIMINADO("EC007", "Usuario Eliminado."),
+    ERROR_ELIMINAR_USUARIO("EC007", "Error al eliminar Usuario"),
+    ERROR_CONSULTA_USUARIO("EC007", "Error al consultar Usuario"),
+    //Inventario
     ARTICULO_YA_EXISTE("EI001", "El artículo ya existe."),
     ARTICULO_NO_ENCONTRADO("EI002", "El artículo no fue encontrado."),
     ARTICULO_ERROR_ACTUALIZAR("EI003", "Error al actualizar el artículo."),
@@ -23,6 +34,7 @@ public enum EnumCodigos {
     ARTICULO_ASIGNADO_NO_ELIMINABLE("EI020","Articulo Asigando no es posible eliminar"),
     ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF"),
     ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito");
+
 
 
     private final String codigo;

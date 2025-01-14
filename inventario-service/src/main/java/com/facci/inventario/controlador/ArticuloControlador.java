@@ -1,28 +1,24 @@
 package com.facci.inventario.controlador;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.TipoRelacion;
+import com.facci.comun.response.ApiResponse;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.dto.ArticuloDetalleDTO;
-import com.facci.inventario.enums.EnumCodigos;
-import com.facci.inventario.enums.TipoRelacion;
-import com.facci.inventario.handler.CustomException;
-import com.facci.inventario.response.ApiResponse;
 import com.facci.inventario.servicio.ArchivoService;
 import com.facci.inventario.servicio.ArticuloAsignacionService;
 import com.facci.inventario.servicio.ArticuloService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/inventario/articulo/items")
@@ -61,10 +57,15 @@ public class ArticuloControlador {
     }
 
     @GetMapping
-    @Operation(summary = "Consultar todos los artículos", description = "Obtiene una lista de todos los artículos registrados en el sistema")
-    public List<ArticuloDTO> consultarTodos() {
-        return articuloService.consultarTodos();
+    @Operation(summary = "Consultar todos los artículos", description = "Obtiene una lista de todos los artículos registrados en el sistema con paginación y filtrado")
+    public Page<ArticuloDTO> consultarTodos(
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> size,
+            @RequestParam Optional<String> filter
+    ) {
+        return articuloService.consultarTodos(page, size, filter);
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "Consultar artículo por ID", description = "Obtiene un artículo registrado en el sistema mediante su ID")

@@ -1,4 +1,4 @@
-package com.facci.configuracion.handler;
+package com.facci.comun.handler;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -12,7 +12,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(CustomException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    public com.facci.configuracion.handler.ErrorMessage handleCustomException(CustomException ex, WebRequest request) {
+    public ErrorMessage handleCustomException(CustomException ex, WebRequest request) {
         return new ErrorMessage(ex.getCodigo(), ex.getMessage());
     }
 }

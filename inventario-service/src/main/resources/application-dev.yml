@@ -10,6 +10,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+      format_sql: true # Formatea las consultas SQL
+      use_sql_comments: true # Agrega comentarios a las consultas
+      highlight_sql: true # Resalta las consultas en los logs
+      show_sql: true # Muestra las consultas SQL
     show-sql: true
 logging:
   level:

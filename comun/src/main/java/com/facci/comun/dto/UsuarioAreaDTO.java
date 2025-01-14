@@ -1,4 +1,4 @@
-package com.facci.configuracion.dto;
+package com.facci.comun.dto;
 
 import com.facci.comun.enums.TipoRelacion;
 import lombok.AllArgsConstructor;

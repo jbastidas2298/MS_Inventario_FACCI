@@ -1,4 +1,4 @@
-package com.facci.inventario.handler;
+package com.facci.comun.handler;
 
 public class ErrorMessage {
     private final String codigo;

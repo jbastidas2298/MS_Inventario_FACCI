@@ -1,17 +1,23 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.EnumRolUsuario;
+import com.facci.comun.enums.TipoRelacion;
+import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.*;
 import com.facci.inventario.enums.*;
-import com.facci.inventario.handler.CustomException;
 import com.facci.inventario.map.ArticuloMapper;
 import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloHistorialRepositorio;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -46,18 +52,27 @@ public class ArticuloService {
         this.articuloHistorialRepositorio = articuloHistorialRepositorio;
     }
 
+
     public ArticuloDTO registrar(ArticuloDTO dto) {
-        verificarArticuloExistente(dto.getCodigoOrigen());
+        try {
+            if(dto.getCodigoOrigen() != null){
+                verificarArticuloExistente(dto.getCodigoOrigen());
+            }
 
-        String secuencial = secuencialService.generarSecuencial("Articulo");
-        dto.setCodigoInterno(secuencial);
-        Articulo articuloGuardado = guardarArticulo(dto);
+            String secuencial = secuencialService.generarSecuencial("Articulo");
+            dto.setCodigoInterno(secuencial);
 
-        UsuarioDTO usuarioSesion = obtenerUsuarioSesion();
-        registrarHistorialYAsignar(dto, articuloGuardado, usuarioSesion, TipoOperacion.INGRESO);
+            Articulo articuloGuardado = guardarArticulo(dto);
 
-        log.debug("Artículo registrado: {}", articuloGuardado.getNombre());
-        return articuloMapper.mapToDto(articuloGuardado);
+            UsuarioDTO usuarioSesion = obtenerUsuarioSesion();
+            registrarHistorialYAsignar(dto, articuloGuardado, usuarioSesion, TipoOperacion.INGRESO);
+
+            log.debug("Artículo registrado: {}", articuloGuardado.getNombre());
+            return articuloMapper.mapToDto(articuloGuardado);
+        }catch (Exception e){
+            throw new CustomException(EnumCodigos.ARTICULO_ERROR_REGISTRAR);
+        }
+
     }
 
     public ArticuloDTO actualizar(ArticuloDTO dto) {
@@ -88,20 +103,27 @@ public class ArticuloService {
         return articuloMapper.mapToDto(articulo);
     }
 
-    public List<ArticuloDTO> consultarTodos() {
+    public Page<ArticuloDTO> consultarTodos(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
+        Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));
+        String filterValue = filter.orElse("").trim();
+
         List<EnumRolUsuario> roles = usuarioSesionService.obtenerRolesActuales();
 
         if (roles.contains(EnumRolUsuario.ADMINISTRADOR)) {
-            List<Articulo> articulos = obtenerTodosLosArticulos();
-            log.info("Artículos consultados (ADMINISTRADOR): {}", articulos.size());
-            return mapearArticulosADTOs(articulos);
+            Page<Articulo> articulosPaginados = articuloRepositorio
+                    .findByNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(filterValue, filterValue, pageable);
+            log.info("Artículos consultados (ADMINISTRADOR): {}", articulosPaginados.getTotalElements());
+            return articulosPaginados.map(articuloMapper::mapToDto);
         } else {
-            List<Long> idsAsignados = articuloAsignacionService.obtenerIdsArticulosAsignadosAlUsuario();
-            List<Articulo> articulos = obtenerArticulosPorIds(idsAsignados);
-            log.info("Artículos consultados para usuario: {}", articulos.size());
-            return mapearArticulosADTOs(articulos);
+            List<Long> idsAsignadosUsuario = articuloAsignacionService.obtenerIdsArticulosAsignadosAlUsuario();
+            Page<Articulo> articulosPaginados = articuloRepositorio
+                    .findByIdInAndNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
+                            idsAsignadosUsuario, filterValue, filterValue, pageable);
+            log.info("Artículos consultados para usuario: {}", articulosPaginados.getTotalElements());
+            return articulosPaginados.map(articuloMapper::mapToDto);
         }
     }
+
 
     private void verificarArticuloExistente(String codigoOrigen) {
         if (articuloRepositorio.findByCodigoOrigen(codigoOrigen).isPresent()) {
@@ -141,10 +163,16 @@ public class ArticuloService {
 
     private void actualizarDatosArticulo(Articulo articulo, ArticuloDTO dto) {
         articulo.setNombre(dto.getNombre());
-        articulo.setDescripcion(dto.getDescripcion());
         articulo.setEstado(dto.getEstado());
         articulo.setMarca(dto.getMarca());
+        articulo.setModelo(dto.getModelo());
+        articulo.setSerie(dto.getSerie());
+        articulo.setSeccion(dto.getSeccion());
+        articulo.setUbicacion(dto.getUbicacion());
+        articulo.setGrupoActivo(dto.getGrupoActivo());
         articulo.setObservacion(dto.getObservacion());
+        articulo.setDescripcion(dto.getDescripcion());
+
     }
 
     private void registrarHistorial(Articulo articulo, TipoOperacion operacion) {

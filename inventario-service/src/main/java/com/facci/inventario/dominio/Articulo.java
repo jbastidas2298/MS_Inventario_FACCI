@@ -2,6 +2,7 @@ package com.facci.inventario.dominio;
 
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.EstadoArticulo;
+import com.facci.inventario.enums.GrupoActivo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,7 +13,6 @@ import lombok.*;
 @Entity
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class Articulo extends EntidadBase {
 
     private String codigoOrigen;
@@ -21,23 +21,40 @@ public class Articulo extends EntidadBase {
 
     private String nombre;
 
-    private String descripcion;
-
     private String marca;
 
+    private String modelo;
+
+    private String serie;
+
+    private String ubicacion;
+
+    private String seccion;
+
     private String observacion;
+
+    private String descripcion;
 
     @Enumerated(EnumType.STRING)
     private EstadoArticulo estado;
 
-    public Articulo(String codigoOrigen,String codigoInterno, String nombre, String descripcion, String marca, String observacion) {
+    @Enumerated(EnumType.STRING)
+    private GrupoActivo grupoActivo;
+
+    public Articulo(String codigoOrigen, String codigoInterno, String nombre, String descripcion, String marca, String modelo, String serie,
+                    String ubicacion, String seccion, String observacion, EstadoArticulo estado, GrupoActivo grupoActivo) {
         this.codigoOrigen = codigoOrigen;
         this.codigoInterno = codigoInterno;
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.marca = marca;
-        this.estado = EstadoArticulo.DISPONIBLE;
+        this.modelo = modelo;
+        this.serie = serie;
+        this.ubicacion = ubicacion;
+        this.seccion = seccion;
         this.observacion = observacion;
+        this.estado = estado != null ? estado : EstadoArticulo.DISPONIBLE;
+        this.grupoActivo = grupoActivo;
     }
 
     public Articulo(ArticuloDTO articuloDTO) {
@@ -46,7 +63,12 @@ public class Articulo extends EntidadBase {
         this.nombre = articuloDTO.getNombre();
         this.descripcion = articuloDTO.getDescripcion();
         this.marca = articuloDTO.getMarca();
-        this.estado = articuloDTO.getEstado();
+        this.modelo = articuloDTO.getModelo();
+        this.serie = articuloDTO.getSerie();
+        this.ubicacion = articuloDTO.getUbicacion();
+        this.seccion = articuloDTO.getSeccion();
         this.observacion = articuloDTO.getObservacion();
+        this.estado = articuloDTO.getEstado() != null ? articuloDTO.getEstado() : EstadoArticulo.DISPONIBLE;
+        this.grupoActivo = articuloDTO.getGrupoActivo();
     }
 }

@@ -1,8 +1,8 @@
 package com.facci.configuracion.controlador;
 
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.configuracion.dto.UsuarioAreaDTO;
 import com.facci.configuracion.dto.UsuarioDTO;
-import com.facci.configuracion.enums.TipoRelacion;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;

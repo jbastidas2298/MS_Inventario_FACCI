@@ -1,12 +1,11 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.EnumRolUsuario;
+import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dto.UsuarioDTO;
-import com.facci.inventario.enums.EnumCodigos;
-import com.facci.inventario.enums.EnumRolUsuario;
-import com.facci.inventario.handler.CustomException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;

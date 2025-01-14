@@ -1,17 +1,16 @@
 package com.facci.configuracion.servicio;
 
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.handler.CustomException;
 import com.facci.configuracion.dominio.Area;
 import com.facci.configuracion.dominio.Usuario;
 import com.facci.configuracion.dto.AreaDTO;
-import com.facci.configuracion.enums.EnumCodigos;
-import com.facci.configuracion.handler.CustomException;
 import com.facci.configuracion.repositorio.AreaRepositorio;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

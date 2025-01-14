@@ -1,7 +1,7 @@
 package com.facci.inventario.repositorio;
 
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.inventario.dominio.ArticuloAsignacion;
-import com.facci.inventario.enums.TipoRelacion;
 
 import java.util.List;
 import java.util.Optional;

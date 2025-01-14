@@ -1,7 +1,7 @@
 package com.facci.configuracion.controlador;
 
-import com.facci.configuracion.enums.EnumCodigos;
-import com.facci.configuracion.handler.CustomException;
+import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.handler.CustomException;
 import com.facci.configuracion.seguridad.JwtTokenProvider;
 import com.facci.configuracion.servicio.UsuarioService;
 import lombok.extern.slf4j.Slf4j;

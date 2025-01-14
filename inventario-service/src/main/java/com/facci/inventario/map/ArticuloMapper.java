@@ -41,6 +41,11 @@ public class ArticuloMapper {
                 .codigoOrigen(articulo.getCodigoOrigen())
                 .codigoInterno(articulo.getCodigoInterno())
                 .marca(articulo.getMarca())
+                .modelo(articulo.getModelo())
+                .serie(articulo.getSerie())
+                .ubicacion(articulo.getUbicacion())
+                .seccion(articulo.getSeccion())
+                .grupoActivo(articulo.getGrupoActivo())
                 .estado(articulo.getEstado())
                 .observacion(articulo.getObservacion())
                 .build();

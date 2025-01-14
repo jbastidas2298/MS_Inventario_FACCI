@@ -1,9 +1,8 @@
 package com.facci.inventario.Configuracion;
 
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.inventario.dto.UsuarioAreaDTO;
 import com.facci.inventario.dto.UsuarioDTO;
-import com.facci.inventario.enums.TipoRelacion;
-import com.facci.inventario.servicio.UsuarioSesionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;

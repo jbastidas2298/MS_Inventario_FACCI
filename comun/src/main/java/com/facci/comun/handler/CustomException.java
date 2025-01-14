@@ -1,6 +1,7 @@
-package com.facci.configuracion.handler;
+package com.facci.comun.handler;
 
-import com.facci.configuracion.enums.EnumCodigos;
+
+import com.facci.comun.enums.EnumCodigos;
 
 public class CustomException extends RuntimeException {
 

@@ -1,6 +1,6 @@
 package com.facci.inventario.dto;
 
-import com.facci.inventario.enums.TipoRelacion;
+import com.facci.comun.enums.TipoRelacion;
 import lombok.*;
 
 @AllArgsConstructor
