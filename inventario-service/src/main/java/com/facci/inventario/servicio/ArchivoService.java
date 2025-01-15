@@ -1,5 +1,6 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;

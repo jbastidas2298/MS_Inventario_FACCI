@@ -1,7 +1,7 @@
 package com.facci.configuracion.controlador;
 
-import com.facci.configuracion.dto.UsuarioAreaDTO;
-import com.facci.configuracion.dto.UsuarioDTO;
+import com.facci.comun.dto.UsuarioAreaDTO;
+import com.facci.comun.dto.UsuarioDTO;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

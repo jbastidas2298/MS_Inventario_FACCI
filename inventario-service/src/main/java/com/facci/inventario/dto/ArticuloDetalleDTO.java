@@ -1,5 +1,6 @@
 package com.facci.inventario.dto;
 
+import com.facci.comun.dto.UsuarioDTO;
 import lombok.*;
 
 import java.util.List;

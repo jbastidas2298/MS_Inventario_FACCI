@@ -1,8 +1,8 @@
 package com.facci.configuracion.map;
 
+import com.facci.comun.dto.UsuarioDTO;
 import com.facci.configuracion.dominio.RolUsuario;
 import com.facci.configuracion.dominio.Usuario;
-import com.facci.configuracion.dto.UsuarioDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.facci.configuracion.dominio;
 
-import com.facci.configuracion.dto.UsuarioDTO;
+import com.facci.comun.dto.UsuarioDTO;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

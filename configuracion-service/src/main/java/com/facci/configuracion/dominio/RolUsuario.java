@@ -1,6 +1,6 @@
 package com.facci.configuracion.dominio;
 
-import com.facci.configuracion.enums.EnumRolUsuario;
+import com.facci.comun.enums.EnumRolUsuario;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

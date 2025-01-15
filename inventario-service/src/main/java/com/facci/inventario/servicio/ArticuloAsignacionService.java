@@ -1,5 +1,7 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.dto.UsuarioAreaDTO;
+import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
@@ -7,8 +9,6 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
-import com.facci.inventario.dto.UsuarioAreaDTO;
-import com.facci.inventario.dto.UsuarioDTO;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
