@@ -13,12 +13,14 @@ import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -164,7 +166,7 @@ public class ArticuloAsignacionService {
                 .collect(Collectors.toList());
     }
 
-    public List<ArticuloAsignacionDTO> obtenerAsignacionesConDetalles() {
+    public List<ArticuloAsignacionDTO> obtenerAsignacionesConDetallesPRB() {
         List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findAll();
         var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
 
@@ -190,6 +192,53 @@ public class ArticuloAsignacionService {
         }).collect(Collectors.toList());
     }
 
+    public Page<ArticuloAsignacionDTO> obtenerAsignacionesConDetalles(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
+        log.info("Consultando asignacion");
+        Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));
+        String filterValue = filter.orElse("").trim();
+        Page<Articulo> paginaArticulos = articuloRepositorio.findByNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
+                filterValue, filterValue, pageable);
+
+        Iterable<ArticuloAsignacion> iterableAsignaciones = articuloAsignacionRepositorio.findAll();
+        List<ArticuloAsignacion> asignaciones = new ArrayList<>();
+        iterableAsignaciones.forEach(asignaciones::add);
+        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
+
+        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
+                .collect(Collectors.toMap(
+                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
+                        usuarioArea -> usuarioArea
+                ));
+
+        Map<Long, ArticuloAsignacion> asignacionMap = asignaciones.stream()
+                .collect(Collectors.toMap(
+                        asignacion -> asignacion.getArticulo().getId(),
+                        asignacion -> asignacion
+                ));
+
+        List<ArticuloAsignacionDTO> contenido = paginaArticulos.getContent().stream().map(articulo -> {
+            ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
+            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
+            dto.setIdArticulo(articulo.getId());
+            dto.setCodigoInterno(articulo.getCodigoInterno());
+            dto.setCodigoOrigen(articulo.getCodigoOrigen());
+            dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
+            dto.setIdUsuario(asignacion != null ? asignacion.getIdUsuario() : null);
+            dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
+
+            if (asignacion != null) {
+                String clave = asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion();
+                UsuarioAreaDTO areaUsuarioArea = areaUsuarioAreaMap.get(clave);
+                dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
+            } else {
+                dto.setNombreAsignado(null);
+            }
+
+            return dto;
+        }).collect(Collectors.toList());
+
+        return new PageImpl<>(contenido, pageable, paginaArticulos.getTotalElements());
+    }
 
 
     private Articulo obtenerArticuloPorId(Long idArticulo) {

@@ -121,7 +121,11 @@ public class ArticuloControlador {
 
     @GetMapping("/asignaciones")
     @Operation(summary = "Consultar asignaciones", description = "Obtiene una lista detallada de todas las asignaciones de artículos")
-    public List<ArticuloAsignacionDTO> consultarAsignaciones() {
-        return articuloAsignacionService.obtenerAsignacionesConDetalles();
+    public Page<ArticuloAsignacionDTO> consultarAsignaciones(
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> size,
+            @RequestParam Optional<String> filter) {
+        return articuloAsignacionService.obtenerAsignacionesConDetalles(page, size, filter);
     }
+
 }
