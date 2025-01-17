@@ -5,12 +5,14 @@ import com.facci.comun.dto.UsuarioDTO;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/configuracion/usuarios")
@@ -45,6 +47,15 @@ public class UsuarioControlador {
     @Operation(summary = "Consultar todos los usuarios", description = "Obtiene una lista de todos los usuarios registrados en el sistema")
     public ResponseEntity<List<UsuarioDTO>> consultarUsuario() {
         return usuarioService.consultarTodos();
+    }
+
+    @GetMapping("usuariosPaginados")
+    @Operation(summary = "Consultar todos los usuarios", description = "Obtiene una lista de todos los usuarios registrados en el sistema")
+    public Page<UsuarioDTO> consultarUsuario(
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> size,
+            @RequestParam Optional<String> filter) {
+        return usuarioService.consultarTodosPaginados(page, size, filter);
     }
 
     @GetMapping("/{id}")

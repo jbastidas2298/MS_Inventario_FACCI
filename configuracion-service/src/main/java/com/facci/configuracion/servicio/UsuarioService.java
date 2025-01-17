@@ -17,6 +17,10 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,6 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -219,6 +224,23 @@ public class UsuarioService {
         log.info("Usuarios consultados: {}", usuariosDto.size());
         return ResponseEntity.ok(usuariosDto);
     }
+
+    public Page<UsuarioDTO> consultarTodosPaginados(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
+        try {
+            Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));
+            String filterValue = filter.orElse("").trim();
+            Page<Usuario> usuariosPaginados = usuarioRepositorio.findByNombreCompletoContainingIgnoreCaseOrNombreUsuarioContainingIgnoreCase(
+                    filterValue, filterValue, pageable);
+            List<UsuarioDTO> usuariosDto = usuariosPaginados.getContent().stream()
+                    .map(usuarioMapper::mapToDto)
+                    .collect(Collectors.toList());
+            return new PageImpl<>(usuariosDto, pageable, usuariosPaginados.getTotalElements());
+        }catch (Exception e){
+            log.error("Error en consulta de usuarios",e.getCause());
+            throw new CustomException(EnumCodigos.ERROR_CONSULTA_USUARIO);
+        }
+    }
+
 
     @Transactional(readOnly = true)
     public UsuarioDTO listarPorNombreUsuario(String nombreUsuario) {
