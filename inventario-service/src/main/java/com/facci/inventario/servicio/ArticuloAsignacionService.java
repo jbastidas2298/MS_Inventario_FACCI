@@ -166,32 +166,6 @@ public class ArticuloAsignacionService {
                 .collect(Collectors.toList());
     }
 
-    public List<ArticuloAsignacionDTO> obtenerAsignacionesConDetallesPRB() {
-        List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findAll();
-        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
-
-        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
-                .collect(Collectors.toMap(
-                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
-                        usuarioArea -> usuarioArea
-                ));
-
-        return asignaciones.stream().map(asignacion -> {
-            String clave = asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion();
-            UsuarioAreaDTO areaUsuarioArea = areaUsuarioAreaMap.get(clave);
-            Articulo articulo = asignacion.getArticulo();
-            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
-            dto.setIdUsuario(asignacion.getIdUsuario());
-            dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre(): null);
-            dto.setIdArticulo(articulo.getId());
-            dto.setCodigoInterno(articulo.getCodigoInterno());
-            dto.setCodigoOrigen(articulo.getCodigoOrigen());
-            dto.setFechaAsignacion(asignacion.getFechaAsignacion());
-            dto.setTipoRelacion(asignacion.getTipoRelacion());
-            return dto;
-        }).collect(Collectors.toList());
-    }
-
     public Page<ArticuloAsignacionDTO> obtenerAsignacionesConDetalles(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
         log.info("Consultando asignacion");
         Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));

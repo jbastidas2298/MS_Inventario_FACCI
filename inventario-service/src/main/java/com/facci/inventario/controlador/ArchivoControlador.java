@@ -13,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -177,5 +178,15 @@ public class ArchivoControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
+    }
+
+    @GetMapping("/reporte-excel")
+    public ResponseEntity<byte[]> descargarReporteExcel() {
+        ByteArrayOutputStream outputStream = archivoService.generarReporteExcel();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
     }
 }

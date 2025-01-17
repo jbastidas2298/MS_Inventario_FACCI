@@ -1,11 +1,13 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloArchivo;
+import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.*;
 import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.enums.GrupoActivo;
@@ -29,8 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.engine.util.JRLoader;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
@@ -571,6 +572,112 @@ public class ArchivoService {
             default:
                 throw new IllegalArgumentException("Tipo de celda no soportado: " + cell.getCellType());
         }
+    }
+
+    public ByteArrayOutputStream generarReporteExcel(){
+        List<ArticuloAsignacionDTO> datos = obtenerDetallesReporte();
+        return generarExcel(datos);
+    }
+
+    public List<ArticuloAsignacionDTO> obtenerDetallesReporte() {
+        List<Articulo> articulos = (List<Articulo>) articuloRepositorio.findAll();
+
+        List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findAll();
+
+        Map<Long, ArticuloAsignacion> asignacionMap = asignaciones.stream()
+                .collect(Collectors.toMap(asignacion -> asignacion.getArticulo().getId(), asignacion -> asignacion));
+
+        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
+        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
+                .collect(Collectors.toMap(
+                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
+                        usuarioArea -> usuarioArea
+                ));
+
+        return articulos.stream().map(articulo -> {
+            ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
+            String clave = asignacion != null ? asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion() : null;
+            UsuarioAreaDTO areaUsuarioArea = clave != null ? areaUsuarioAreaMap.get(clave) : null;
+            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
+
+            dto.setNombreArticulo(articulo.getNombre());
+            dto.setCodigoInterno(articulo.getCodigoInterno());
+            dto.setCodigoOrigen(articulo.getCodigoOrigen());
+            dto.setMarcaArticulo(articulo.getMarca());
+            dto.setSerieArticulo(articulo.getSerie());
+            dto.setModeloArticulo(articulo.getModelo());
+            dto.setUbicacionArticulo(articulo.getUbicacion());
+            dto.setSeccionArticulo(articulo.getSeccion());
+            dto.setGrupoActivo(articulo.getGrupoActivo());
+            dto.setEstadoArticulo(articulo.getEstado());
+            dto.setDescripcion(articulo.getDescripcion());
+            dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
+            dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
+            dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    public ByteArrayOutputStream generarExcel(List<ArticuloAsignacionDTO> datos) {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Reporte Artículos");
+
+        CellStyle headerStyle = workbook.createCellStyle();
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+
+        Row headerRow = sheet.createRow(0);
+        String[] columnas = {
+                "Nombre Artículo", "Código Interno", "Código Origen", "Marca", "Serie", "Modelo", "Ubicación",
+                "Sección", "Grupo Activo", "Estado", "Descripción", "Nombre Asignado", "Tipo Relación", "Fecha Asignación"
+        };
+
+        for (int i = 0; i < columnas.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(columnas[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        int rowNum = 1;
+        for (ArticuloAsignacionDTO dto : datos) {
+            Row row = sheet.createRow(rowNum++);
+
+            row.createCell(0).setCellValue(dto.getNombreArticulo() != null ? dto.getNombreArticulo() : "");
+            row.createCell(1).setCellValue(dto.getCodigoInterno() != null ? dto.getCodigoInterno() : "");
+            row.createCell(2).setCellValue(dto.getCodigoOrigen() != null ? dto.getCodigoOrigen() : "");
+            row.createCell(3).setCellValue(dto.getMarcaArticulo() != null ? dto.getMarcaArticulo() : "");
+            row.createCell(4).setCellValue(dto.getSerieArticulo() != null ? dto.getSerieArticulo() : "");
+            row.createCell(5).setCellValue(dto.getModeloArticulo() != null ? dto.getModeloArticulo() : "");
+            row.createCell(6).setCellValue(dto.getUbicacionArticulo() != null ? dto.getUbicacionArticulo() : "");
+            row.createCell(7).setCellValue(dto.getSeccionArticulo() != null ? dto.getSeccionArticulo() : "");
+            row.createCell(8).setCellValue(dto.getGrupoActivo() != null ? dto.getGrupoActivo().name() : "");
+            row.createCell(9).setCellValue(dto.getEstadoArticulo() != null ? dto.getEstadoArticulo().name() : "");
+            row.createCell(10).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+            row.createCell(11).setCellValue(dto.getNombreAsignado() != null ? dto.getNombreAsignado() : "");
+            row.createCell(12).setCellValue(dto.getTipoRelacion() != null ? dto.getTipoRelacion().name() : "");
+            row.createCell(13).setCellValue(dto.getFechaAsignacion() != null ? dto.getFechaAsignacion().toString() : "");
+        }
+
+        for (int i = 0; i < columnas.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        try {
+            workbook.write(outputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                workbook.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return outputStream;
     }
 
 
