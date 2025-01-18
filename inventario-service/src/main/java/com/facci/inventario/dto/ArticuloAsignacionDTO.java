@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class ArticuloAsignacionDTO {
-
     private Long idUsuario;
     private String nombreAsignado;
     private Long idArticulo;
@@ -28,6 +27,4 @@ public class ArticuloAsignacionDTO {
     private String seccionArticulo;
     private GrupoActivo grupoActivo;
     private String descripcion;
-
-
 }

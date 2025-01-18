@@ -11,6 +11,7 @@ import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
+import com.facci.inventario.repositorio.ArticuloCustomRepositorio;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,16 +33,19 @@ public class ArticuloAsignacionService {
     private final ArticuloHistorialService articuloHistorialService;
     private final UsuarioSesionService usuarioSesionService;
     private final ConfiguracionService configuracionService;
+    private final ArticuloCustomRepositorio articuloCustomRepositorio;
 
-    public ArticuloAsignacionService(ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ArticuloRepositorio articuloRepositorio, ArticuloHistorialService articuloHistorialService, UsuarioSesionService usuarioSesionService, ConfiguracionService configuracionService){
+    public ArticuloAsignacionService(ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ArticuloRepositorio articuloRepositorio, ArticuloHistorialService articuloHistorialService, UsuarioSesionService usuarioSesionService, ConfiguracionService configuracionService, ArticuloCustomRepositorio articuloCustomRepositorio) {
         this.articuloAsignacionRepositorio = articuloAsignacionRepositorio;
         this.articuloRepositorio = articuloRepositorio;
         this.articuloHistorialService = articuloHistorialService;
         this.usuarioSesionService = usuarioSesionService;
         this.configuracionService = configuracionService;
+        this.articuloCustomRepositorio = articuloCustomRepositorio;
     }
 
     public List<ArticuloAsignacionDTO> asignarArticulos(Long idRelacionado, TipoRelacion tipoRelacion, List<Long> idsArticulos) {
+        log.info("Asignando artículos al usuario/área con ID: {}", idRelacionado);
         return idsArticulos.stream()
                 .map(idArticulo -> {
                     ArticuloAsignacion asignacion = articuloAsignacionRepositorio.findByArticuloId(idArticulo)
@@ -86,30 +90,18 @@ public class ArticuloAsignacionService {
                 .collect(Collectors.toList());
     }
 
-
-
-
-    public List<ArticuloAsignacion> reasignarArticulosTodos(
-            Long idUsuarioActual,
-            TipoRelacion tipoRelacionActual,
-            Long idUsuarioNuevo,
-            TipoRelacion tipoRelacionNuevo,
-            String descripcion) {
-
+    public List<ArticuloAsignacion> reasignarArticulosTodos(Long idUsuarioActual,TipoRelacion tipoRelacionActual,Long idUsuarioNuevo,TipoRelacion tipoRelacionNuevo,String descripcion) {
+        log.info("Reasignando todos los artículos del usuario/área con ID: {} a usuario/área con ID: {}", idUsuarioActual, idUsuarioNuevo);
         List<ArticuloAsignacion> asignacionesActuales = articuloAsignacionRepositorio.findByIdUsuarioAndTipoRelacion(
                 idUsuarioActual, tipoRelacionActual);
-
         if (asignacionesActuales.isEmpty()) {
             throw new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS);
         }
-
         return asignacionesActuales.stream()
                 .map(asignacion -> {
                     asignacion.setIdUsuario(idUsuarioNuevo);
                     asignacion.setTipoRelacion(tipoRelacionNuevo);
-
                     ArticuloAsignacion asignacionActualizada = articuloAsignacionRepositorio.save(asignacion);
-
                     UsuarioDTO usuarioDTO = usuarioSesionService.usuarioCompleto();
                     articuloHistorialService.registrarEvento(
                             asignacion.getArticulo(),
@@ -119,16 +111,29 @@ public class ArticuloAsignacionService {
                                     idUsuarioActual, tipoRelacionActual, idUsuarioNuevo, tipoRelacionNuevo, descripcion),
                             usuarioDTO
                     );
-
                     return asignacionActualizada;
                 })
                 .collect(Collectors.toList());
     }
-
+    public void eliminarAsignacionesPorArticulo(Long idArticulo) {
+        log.info("Eliminando asignaciones para el artículo con ID: {}", idArticulo);
+        var asignacion = articuloAsignacionRepositorio.findByArticuloId(idArticulo);
+        if (asignacion.isEmpty()) {
+            log.info("No se encontraron asignaciones para el artículo con ID: {}", idArticulo);
+            throw new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS);
+        }
+        articuloAsignacionRepositorio.delete(asignacion.get());
+        articuloHistorialService.registrarEvento(
+                asignacion.get().getArticulo(),
+                TipoOperacion.ELIMINACION_ASIGNACION,
+                "Asignación eliminada",
+                usuarioSesionService.usuarioCompleto()
+        );
+    }
 
     public List<ArticuloAsignacion> reasignarArticulos(List<Long> idsArticulos, Long idUsuarioNuevo, String descripcion) {
+        log.info("Reasignando artículos con IDs: {} a usuario con ID: {}", idsArticulos, idUsuarioNuevo);
         UsuarioDTO usuarioDTO = usuarioSesionService.usuarioCompleto();
-
         return idsArticulos.stream()
                 .map(idArticulo -> {
                     ArticuloAsignacion asignacionActual = articuloAsignacionRepositorio.findByArticuloId(idArticulo)
@@ -150,13 +155,11 @@ public class ArticuloAsignacionService {
                 .collect(Collectors.toList());
     }
 
-
     public List<Long> obtenerIdsArticulosAsignadosAlUsuario() {
+        log.info("Obteniendo IDs de artículos asignados al usuario en sesión");
         UsuarioDTO usuarioSesion = usuarioSesionService.usuarioCompleto();
         Long idUsuario = usuarioSesion.getId();
-
         List<ArticuloAsignacion> asignaciones = articuloAsignacionRepositorio.findByIdUsuario(idUsuario);
-
         if (asignaciones.isEmpty()) {
             log.info("No se encontraron asignaciones para el usuario con ID: {}", idUsuario);
             return Collections.emptyList();
@@ -166,57 +169,24 @@ public class ArticuloAsignacionService {
                 .collect(Collectors.toList());
     }
 
-    public Page<ArticuloAsignacionDTO> obtenerAsignacionesConDetalles(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
-        log.info("Consultando asignacion");
-        Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));
-        String filterValue = filter.orElse("").trim();
-        Page<Articulo> paginaArticulos = articuloRepositorio.findByNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
-                filterValue, filterValue, pageable);
-
-        Iterable<ArticuloAsignacion> iterableAsignaciones = articuloAsignacionRepositorio.findAll();
-        List<ArticuloAsignacion> asignaciones = new ArrayList<>();
-        iterableAsignaciones.forEach(asignaciones::add);
-        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
-
-        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
-                .collect(Collectors.toMap(
-                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
-                        usuarioArea -> usuarioArea
-                ));
-
-        Map<Long, ArticuloAsignacion> asignacionMap = asignaciones.stream()
-                .collect(Collectors.toMap(
-                        asignacion -> asignacion.getArticulo().getId(),
-                        asignacion -> asignacion
-                ));
-
-        List<ArticuloAsignacionDTO> contenido = paginaArticulos.getContent().stream().map(articulo -> {
-            ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
-            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
-            dto.setIdArticulo(articulo.getId());
-            dto.setCodigoInterno(articulo.getCodigoInterno());
-            dto.setCodigoOrigen(articulo.getCodigoOrigen());
-            dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
-            dto.setIdUsuario(asignacion != null ? asignacion.getIdUsuario() : null);
-            dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
-
-            if (asignacion != null) {
-                String clave = asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion();
-                UsuarioAreaDTO areaUsuarioArea = areaUsuarioAreaMap.get(clave);
-                dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
-            } else {
-                dto.setNombreAsignado(null);
-            }
-
-            return dto;
-        }).collect(Collectors.toList());
-
-        return new PageImpl<>(contenido, pageable, paginaArticulos.getTotalElements());
-    }
-
-
-    private Articulo obtenerArticuloPorId(Long idArticulo) {
-        return articuloRepositorio.findById(idArticulo)
-                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
+    public Page<ArticuloAsignacionDTO> obtenerAsignacionesConDetalles(Optional<Integer> page,
+                                                                      Optional<Integer> size,
+                                                                      Optional<String> filter_articulo,
+                                                                      Optional<String> filter_usuario) {
+        int pageNumber = page.orElse(0);
+        int pageSize = size.orElse(10);
+        String filterArticulo = filter_articulo.orElse("");
+        String filterUsuario = filter_usuario.orElse("");
+        log.info("Obteniendo asignaciones con detalles. Página: {}, Tamaño: {}, Filtro artículo: {}, Filtro usuario: {}",
+                pageNumber, pageSize, filterArticulo, filterUsuario);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<ArticuloAsignacionDTO> contenido = articuloCustomRepositorio.obtenerAsignaciones(
+                filterArticulo,
+                filterUsuario,
+                pageNumber * pageSize,
+                pageSize
+        );
+        long totalElementos = articuloCustomRepositorio.contarAsignaciones(filterArticulo, filterUsuario);
+        return new PageImpl<>(contenido, pageable, totalElementos);
     }
 }

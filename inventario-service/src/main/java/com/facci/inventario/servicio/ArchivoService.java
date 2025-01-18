@@ -205,7 +205,9 @@ public class ArchivoService {
 
     private void guardarRutaPath(long articuloId, TipoArchivo tipoArchivo, String path) {
         ArticuloArchivo archivo = new ArticuloArchivo();
-        archivo.setArticuloId(articuloId);
+        var articulo = articuloRepositorio.findById(articuloId)
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
+        archivo.setArticulo(articulo);
         archivo.setTipo(tipoArchivo);
         archivo.setPath(path);
         articuloArchivoRepositorio.save(archivo);
@@ -375,7 +377,7 @@ public class ArchivoService {
     }
 
     private List<Map<String, Object>> obtenerHistorialData(Long articuloId) {
-        return articuloHistorialRepositorio.findByIdArticulo(articuloId).stream()
+        return articuloHistorialRepositorio.findByArticulo_Id(articuloId).stream()
                 .map(historialEntity -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("tipo", historialEntity.getTipoOperacion().toString());
@@ -502,6 +504,7 @@ public class ArchivoService {
 
     @Transactional
     public List<ArticuloDTO> procesarExcel(MultipartFile file) throws Exception {
+        log.info("Procesando archivo Excel");
         List<ArticuloDTO> articuloDTOS = new ArrayList<>();
         if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
             throw new IllegalArgumentException("El archivo no es un Excel válido.");
@@ -511,6 +514,7 @@ public class ArchivoService {
             XSSFSheet sheet = workbook.getSheetAt(0);
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                log.info("Procesando fila {}", i);
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
@@ -538,7 +542,7 @@ public class ArchivoService {
                             articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
                             break;
                     }
-
+                    articuloDTO.setObservacion("Archivo Excel");
                     articuloService.registrar(articuloDTO);
                     articuloDTOS.add(articuloDTO);
 
@@ -575,11 +579,13 @@ public class ArchivoService {
     }
 
     public ByteArrayOutputStream generarReporteExcel(){
+        log.info("Generando reporte Excel");
         List<ArticuloAsignacionDTO> datos = obtenerDetallesReporte();
         return generarExcel(datos);
     }
 
     public List<ArticuloAsignacionDTO> obtenerDetallesReporte() {
+        log.info("Obteniendo detalles para reporte");
         List<Articulo> articulos = (List<Articulo>) articuloRepositorio.findAll();
 
         List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findAll();
@@ -595,6 +601,7 @@ public class ArchivoService {
                 ));
 
         return articulos.stream().map(articulo -> {
+            log.info("Procesando articulo {}", articulo.getId());
             ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
             String clave = asignacion != null ? asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion() : null;
             UsuarioAreaDTO areaUsuarioArea = clave != null ? areaUsuarioAreaMap.get(clave) : null;
@@ -616,18 +623,18 @@ public class ArchivoService {
             dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
 
             return dto;
+
         }).collect(Collectors.toList());
     }
 
     public ByteArrayOutputStream generarExcel(List<ArticuloAsignacionDTO> datos) {
+        log.info("Generando reporte Excel");
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Reporte Artículos");
-
         CellStyle headerStyle = workbook.createCellStyle();
         Font headerFont = workbook.createFont();
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
-
         Row headerRow = sheet.createRow(0);
         String[] columnas = {
                 "Nombre Artículo", "Código Interno", "Código Origen", "Marca", "Serie", "Modelo", "Ubicación",
@@ -639,7 +646,6 @@ public class ArchivoService {
             cell.setCellValue(columnas[i]);
             cell.setCellStyle(headerStyle);
         }
-
         int rowNum = 1;
         for (ArticuloAsignacionDTO dto : datos) {
             Row row = sheet.createRow(rowNum++);
@@ -659,11 +665,9 @@ public class ArchivoService {
             row.createCell(12).setCellValue(dto.getTipoRelacion() != null ? dto.getTipoRelacion().name() : "");
             row.createCell(13).setCellValue(dto.getFechaAsignacion() != null ? dto.getFechaAsignacion().toString() : "");
         }
-
         for (int i = 0; i < columnas.length; i++) {
             sheet.autoSizeColumn(i);
         }
-
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             workbook.write(outputStream);
@@ -676,9 +680,7 @@ public class ArchivoService {
                 e.printStackTrace();
             }
         }
-
+        log.info("Finalizando generación de reporte Excel");
         return outputStream;
     }
-
-
 }

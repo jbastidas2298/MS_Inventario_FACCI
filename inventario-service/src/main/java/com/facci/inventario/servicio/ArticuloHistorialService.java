@@ -22,12 +22,13 @@ public class ArticuloHistorialService {
 
     public void registrarEvento(Articulo articulo, TipoOperacion tipoOperacion, String descripcion, UsuarioDTO usuarioDTO) {
         String descripcionFinal = Optional.ofNullable(descripcion)
+                .filter(desc -> !desc.isEmpty())
                 .orElseGet(() -> generarDescripcion(tipoOperacion, articulo, usuarioDTO));
 
         log.info("Registrando evento para artículo con ID {} y operación {}", articulo.getId(), tipoOperacion);
 
         ArticuloHistorial historial = ArticuloHistorial.builder()
-                .idArticulo(articulo.getId())
+                .articulo(articulo)
                 .codigoInterno(articulo.getCodigoInterno())
                 .tipoOperacion(tipoOperacion)
                 .descripcion(descripcionFinal)
@@ -37,6 +38,7 @@ public class ArticuloHistorialService {
     }
 
     private String generarDescripcion(TipoOperacion tipoOperacion, Articulo articulo, UsuarioDTO usuarioDTO) {
+        log.info("Generando descripción para operación {} en artículo con ID {}", tipoOperacion, articulo.getId());
         return switch (tipoOperacion) {
             case INGRESO -> "Se ingresó un nuevo artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();
             case ACTUALIZACION -> "Se actualizó el artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();

@@ -112,7 +112,6 @@ public class ArticuloControlador {
         return ResponseEntity.ok(reasignaciones);
     }
 
-
     @GetMapping("/articuloDetalle/{id}")
     @Operation(summary = "Consultar detalles de un artículo", description = "Obtiene todos los detalles de un artículo mediante su ID")
     public ArticuloDetalleDTO consultarArticuloDetalle(@PathVariable Long id) {
@@ -124,8 +123,15 @@ public class ArticuloControlador {
     public Page<ArticuloAsignacionDTO> consultarAsignaciones(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> size,
-            @RequestParam Optional<String> filter) {
-        return articuloAsignacionService.obtenerAsignacionesConDetalles(page, size, filter);
+            @RequestParam Optional<String> filter_articulo,
+            Optional<String> filter_usuario) {
+        return articuloAsignacionService.obtenerAsignacionesConDetalles(page, size, filter_articulo,filter_usuario);
     }
 
+    @DeleteMapping("/eliminarAsignacion/{id}")
+    @Operation(summary = "Eliminar asignación", description = "Elimina una asignación de artículo mediante su ID")
+    public ResponseEntity<String> eliminarAsignacion(@PathVariable Long id) {
+        articuloAsignacionService.eliminarAsignacionesPorArticulo(id);
+        return ResponseEntity.ok("Asignación eliminada exitosamente.");
+    }
 }

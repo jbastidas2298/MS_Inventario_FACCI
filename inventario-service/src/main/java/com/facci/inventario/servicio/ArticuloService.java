@@ -55,6 +55,7 @@ public class ArticuloService {
 
 
     public ArticuloDTO registrar(ArticuloDTO dto) {
+        log.info("Registrando nuevo artículo: {}", dto.getNombre());
         try {
             if(dto.getCodigoOrigen() != null){
                 verificarArticuloExistente(dto.getCodigoOrigen());
@@ -151,8 +152,10 @@ public class ArticuloService {
     }
 
     private void registrarHistorialYAsignar(ArticuloDTO articuloDTO, Articulo articulo, UsuarioDTO usuario, TipoOperacion operacion) {
-        articuloHistorialService.registrarEvento(articulo, operacion, operacion + " " + articulo.getObservacion(), usuario);
+        log.info("Registrando historial para el artículo: {}", articulo.getNombre());
+        articuloHistorialService.registrarEvento(articulo, operacion, operacion +" "+ articulo.getObservacion(), usuario);
         if(articuloDTO.isAsignarseArticulo()){
+            log.info("Asignando artículo a usuario: {}", usuario.getNombreCompleto());
             articuloAsignacionService.asignarArticulos(usuario.getId(), TipoRelacion.USUARIO, Collections.singletonList(articulo.getId()));
         }
     }
@@ -214,7 +217,7 @@ public class ArticuloService {
                 }).collect(Collectors.toList());
         detalleDTO.setArchivos(archivos);
 
-        List<ArticuloHistorialDTO> historial = articuloHistorialRepositorio.findByIdArticulo(articuloId).stream()
+        List<ArticuloHistorialDTO> historial = articuloHistorialRepositorio.findByArticulo_Id(articuloId).stream()
                 .map(historialEntity -> {
                     ArticuloHistorialDTO historialDTO = new ArticuloHistorialDTO();
                     historialDTO.setCodigoInterno(historialEntity.getCodigoInterno());

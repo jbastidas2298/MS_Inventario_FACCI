@@ -1,10 +1,7 @@
 package com.facci.inventario.dominio;
 
 import com.facci.inventario.enums.TipoOperacion;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -14,8 +11,8 @@ import lombok.*;
 @Data
 public class ArticuloHistorial extends EntidadBase {
 
-    @Column(nullable = false)
-    private Long idArticulo;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    private Articulo articulo;
 
     @Column(nullable = false)
     private String codigoInterno;
