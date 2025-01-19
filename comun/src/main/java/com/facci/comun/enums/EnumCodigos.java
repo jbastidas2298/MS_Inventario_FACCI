@@ -13,6 +13,7 @@ public enum EnumCodigos {
     ERROR_CONSULTA_USUARIO("EC007", "Error al consultar Usuario"),
     ERROR_GENERAR_NOMBRE_USUARIO("EC008", "Error al generar nombre de usuario, solicitado minimo 1 nombre y 2 apellido"),
     ERROR_IMPORTAR_USUARIOS("EC009", "Error al importar usuarios"),
+    ERROR_ACTUALIZAR_USUARIO("EC010", "Error al actualizar usuario"),
     //Inventario
     ARTICULO_YA_EXISTE("EI001", "El artículo ya existe."),
     ARTICULO_NO_ENCONTRADO("EI002", "El artículo no fue encontrado."),

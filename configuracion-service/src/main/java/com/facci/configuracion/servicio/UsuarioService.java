@@ -76,42 +76,36 @@ public class UsuarioService {
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
-
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + usuarioDto.getId();
             log.error(mensajeError);
             throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
         }
-
         var usuarioRecargado = usuarioOp.get();
-
         try {
+            usuarioRecargado.setNombreUsuario(usuarioDto.getNombreUsuario());
             usuarioRecargado.setActivo(usuarioDto.isActivo());
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
-            usuarioRecargado.getRoles().clear();
             if(!usuarioDto.getContrasena().isEmpty()){
                 String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
-                usuarioDto.setContrasena(encryptedPassword);
-            }else {
-                String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
-                usuarioDto.setContrasena(encryptedPassword);
+                usuarioRecargado.setContrasena(encryptedPassword);
             }
+            usuarioRecargado.getRoles().clear();
             List<RolUsuario> nuevosRoles = usuarioDto.getRoles().stream()
                     .map(rolEnum -> new RolUsuario(rolEnum, usuarioRecargado))
                     .collect(Collectors.toList());
             usuarioRecargado.getRoles().addAll(nuevosRoles);
-            Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
 
+            Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
             log.info("Usuario modificado: {}", usuarioActualizado.getNombreUsuario());
             return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioActualizado));
         } catch (Exception e) {
             String mensajeError = "Error al actualizar el usuario: " + usuarioRecargado.getNombreUsuario();
             log.error(mensajeError, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(mensajeError);
+            throw  new CustomException(EnumCodigos.ERROR_ACTUALIZAR_USUARIO);
         }
     }
-
 
     @Transactional
     public ResponseEntity<?> eliminar(Long id) {
