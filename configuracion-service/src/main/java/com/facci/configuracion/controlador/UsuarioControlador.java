@@ -2,6 +2,7 @@ package com.facci.configuracion.controlador;
 
 import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
+import com.facci.comun.handler.CustomException;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +12,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -77,14 +80,20 @@ public class UsuarioControlador {
     }
 
     @PostMapping("/importar-excel")
-    @Operation(summary = "Usuario Excel", description = "Importa masivamente usuario desde formato excel")
-    public ResponseEntity<List<UsuarioDTO>> importarExcel(@RequestParam("file") MultipartFile file) {
+    @Operation(summary = "Usuario Excel", description = "Importa masivamente usuario desde formato Excel")
+    public ResponseEntity<?> importarExcel(@RequestParam("file") MultipartFile file) {
         try {
-            var usuariosProcesados= usuarioService.procesarExcel(file);
+            var usuariosProcesados = usuarioService.procesarExcel(file);
             return ResponseEntity.ok(usuariosProcesados);
+        } catch (CustomException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("codigo", e.getCodigo());
+            errorResponse.put("mensaje", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+                    .body(Map.of("codigo", "ERR000", "mensaje", "Error inesperado en el servidor"));
         }
     }
+
 }

@@ -15,6 +15,7 @@ import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloHistorialRepositorio;
 import com.facci.inventario.repositorio.ArticuloRepositorio;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -88,14 +89,15 @@ public class ArticuloService {
         return articuloMapper.mapToDto(articuloActualizado);
     }
 
+    @Transactional
     public void eliminar(Long id) {
         Articulo articulo = obtenerArticuloPorId(id);
-
         Optional<ArticuloAsignacion> articuloAsignacion = articuloAsignacionRepositorio.findByArticuloId(id);
+        articuloHistorialRepositorio.deleteByArticulo_Id(id);
+        articuloArchivoRepositorio.deleteByArticulo_Id(id);
         if (articuloAsignacion.isPresent()) {
             throw new CustomException(EnumCodigos.ARTICULO_ASIGNADO_NO_ELIMINABLE);
         }
-
         articuloRepositorio.delete(articulo);
         log.info("Artículo eliminado con id: {}", id);
     }
@@ -105,7 +107,7 @@ public class ArticuloService {
         return articuloMapper.mapToDto(articulo);
     }
 
-    public Page<ArticuloDTO> consultarTodos(Optional<Integer> page, Optional<Integer> size, Optional<String> filter) {
+    public Page<ArticuloDTO> consultarTodos(Optional<Integer> page, Optional<Integer> size, Optional<String> filter, EstadoArticulo estado) {
         Pageable pageable = PageRequest.of(page.orElse(0), size.orElse(10));
         String filterValue = filter.orElse("").trim();
 
@@ -113,14 +115,14 @@ public class ArticuloService {
 
         if (roles.contains(EnumRolUsuario.ADMINISTRADOR)) {
             Page<Articulo> articulosPaginados = articuloRepositorio
-                    .findByNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(filterValue, filterValue, pageable);
+                    .findByEstadoAndNombreContainingIgnoreCaseOrEstadoAndCodigoOrigenContainingIgnoreCase(estado,filterValue, estado,filterValue, pageable);
             log.info("Artículos consultados (ADMINISTRADOR): {}", articulosPaginados.getTotalElements());
             return articulosPaginados.map(articuloMapper::mapToDto);
         } else {
             List<Long> idsAsignadosUsuario = articuloAsignacionService.obtenerIdsArticulosAsignadosAlUsuario();
             Page<Articulo> articulosPaginados = articuloRepositorio
-                    .findByIdInAndNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
-                            idsAsignadosUsuario, filterValue, filterValue, pageable);
+                    .findByEstadoAndIdInAndNombreContainingIgnoreCaseOrEstadoAndIdInAndCodigoOrigenContainingIgnoreCase(
+                            estado,idsAsignadosUsuario, filterValue,estado, idsAsignadosUsuario,filterValue, pageable);
             log.info("Artículos consultados para usuario: {}", articulosPaginados.getTotalElements());
             return articulosPaginados.map(articuloMapper::mapToDto);
         }

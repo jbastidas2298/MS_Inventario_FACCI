@@ -7,6 +7,7 @@ import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.dto.ArticuloDetalleDTO;
+import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.servicio.ArchivoService;
 import com.facci.inventario.servicio.ArticuloAsignacionService;
 import com.facci.inventario.servicio.ArticuloService;
@@ -61,9 +62,10 @@ public class ArticuloControlador {
     public Page<ArticuloDTO> consultarTodos(
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> size,
-            @RequestParam Optional<String> filter
-    ) {
-        return articuloService.consultarTodos(page, size, filter);
+            @RequestParam Optional<String> filter,
+            @RequestParam EstadoArticulo estado
+            ) {
+        return articuloService.consultarTodos(page, size, filter, estado);
     }
 
 

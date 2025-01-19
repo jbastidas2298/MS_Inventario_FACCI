@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ArticuloHistorialRepositorio extends BaseRepositorio<ArticuloHistorial>{
     List<ArticuloHistorial> findByArticulo_Id(Long idArticulo);
+    public void deleteByArticulo_Id(Long idArticulo);
 }

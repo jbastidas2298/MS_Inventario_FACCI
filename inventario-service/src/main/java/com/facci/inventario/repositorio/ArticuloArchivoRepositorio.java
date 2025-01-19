@@ -11,4 +11,5 @@ public interface ArticuloArchivoRepositorio extends BaseRepositorio<ArticuloArch
     Optional<ArticuloArchivo> findByPath(String path);
     List<ArticuloArchivo> findByArticuloId(Long articuloId);
     List<ArticuloArchivo> findByArticuloIdAndTipo(Long articuloId, TipoArchivo tipoArchivo);
+    public void deleteByArticulo_Id(Long idArticulo);
 }

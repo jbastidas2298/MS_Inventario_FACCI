@@ -57,8 +57,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:4200",
                 "https://localhost:4200",
-                "https://192.168.10.109:4200",
-                "https://192.168.10.109"
+                "https://facci-inventario"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.addAllowedHeader("*");

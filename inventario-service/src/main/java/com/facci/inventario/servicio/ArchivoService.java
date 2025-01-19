@@ -521,12 +521,13 @@ public class ArchivoService {
                 try {
                     ArticuloDTO articuloDTO = new ArticuloDTO();
                     articuloDTO.setAsignarseArticulo(false);
-
+                    String nombreArticulo = getCellValueAsString(row.getCell(3));
+                    if (nombreArticulo == null || nombreArticulo.isEmpty()) continue;
                     articuloDTO.setUbicacion(getCellValueAsString(row.getCell(0)));
                     articuloDTO.setSeccion(getCellValueAsString(row.getCell(1)));
                     String grupoActivoValue = getCellValueAsString(row.getCell(2)).toUpperCase().replace(" ", "_");
                     articuloDTO.setGrupoActivo(GrupoActivo.valueOf(grupoActivoValue));
-                    articuloDTO.setNombre(getCellValueAsString(row.getCell(3)));
+                    articuloDTO.setNombre(nombreArticulo);
                     articuloDTO.setMarca(getCellValueAsString(row.getCell(4)));
                     articuloDTO.setModelo(getCellValueAsString(row.getCell(5)));
                     articuloDTO.setSerie(getCellValueAsString(row.getCell(6)));

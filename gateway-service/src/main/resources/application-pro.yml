@@ -13,9 +13,9 @@ spring:
           '[/**]':
             allowedOrigins:
               - "http://localhost:4200"
-              - "https://192.168.10.109:4200"
-              - "https://192.168.10.109"
-              - "https://192.168.10.109/"
+              - "https://facci-inventario:4200"
+              - "https://facci-inventario"
+              - "https://facci-inventario/"
             allowedHeaders:
               - "*"
             allowedMethods:
@@ -46,4 +46,4 @@ jwt:
   secret: $2a$10$5Kndd1j0JbfdAFSuU0GTkO4PradBmrcPfMhD1u8kMkJdxP75k7n.O
   expiration: 86400000
 cors:
-  allowed-origins: "http://192.168.10.109"
+  allowed-origins: "http://facci-inventario"

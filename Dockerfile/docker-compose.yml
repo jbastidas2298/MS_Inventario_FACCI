@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8097:8097"
+    environment:
+      SPRING_PROFILES_ACTIVE: pro
+    networks:
+      - app-network
+
+  configuracion-service:
+    build:
+      context: ./configuracion-service
+      dockerfile: Dockerfile
+    container_name: configuracion-service
+    ports:
+      - "8099:8099"
+    environment:
+      SPRING_PROFILES_ACTIVE: pro
+    networks:
+      - app-network
+
+  inventario-service:
+    build:
+      context: ./inventario-service
+      dockerfile: Dockerfile
+    container_name: inventario-service
+    ports:
+      - "8098:8098"
+    environment:
+      SPRING_PROFILES_ACTIVE: pro
+    volumes:
+      - /c/archivos:/archivos
+    networks:
+      - app-network
+
+  angular-service:
+    build:
+      context: ./angular-service
+      dockerfile: Dockerfile
+    container_name: inventario-angular
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./angular-service/certificados:/etc/nginx/certs:ro
+    networks:
+      - app-network
+      
+networks:
+  app-network:
+    driver: bridge

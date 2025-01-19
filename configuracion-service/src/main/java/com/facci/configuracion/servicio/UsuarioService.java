@@ -93,6 +93,9 @@ public class UsuarioService {
             if(!usuarioDto.getContrasena().isEmpty()){
                 String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
                 usuarioDto.setContrasena(encryptedPassword);
+            }else {
+                String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
+                usuarioDto.setContrasena(encryptedPassword);
             }
             List<RolUsuario> nuevosRoles = usuarioDto.getRoles().stream()
                     .map(rolEnum -> new RolUsuario(rolEnum, usuarioRecargado))
@@ -255,65 +258,79 @@ public class UsuarioService {
         return usuario;
     }
 
+    @Transactional
     public List<UsuarioDTO> procesarExcel(MultipartFile file) throws Exception {
-        List<UsuarioDTO> usuarioDTOS = new ArrayList<>();
-        if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
-            throw new IllegalArgumentException("El archivo no es un Excel válido.");
-        }
-
-        try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
-            XSSFSheet sheet = workbook.getSheetAt(0);
-
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
-                Row row = sheet.getRow(i);
-                if (row == null) continue;
-
-                String nombreCompleto = row.getCell(0).getStringCellValue();
-                String correo = row.getCell(1).getStringCellValue();
-
-                String nombreUsuario = generarNombreUsuario(nombreCompleto);
-
-                String contrasena = generarContrasena();
-
-                UsuarioDTO usuarioDTO = new UsuarioDTO(
-                        nombreCompleto,
-                        nombreUsuario,
-                        correo,
-                        contrasena,
-                        false,
-                        EnumRolUsuario.DOCENTE
-                );
-                registrarUsuario(usuarioDTO);
-                usuarioDTOS.add(usuarioDTO);
+        try {
+            List<UsuarioDTO> usuarioDTOS = new ArrayList<>();
+            if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
+                throw new IllegalArgumentException("El archivo no es un Excel válido.");
             }
+            try (XSSFWorkbook workbook = new XSSFWorkbook(file.getInputStream())) {
+                XSSFSheet sheet = workbook.getSheetAt(0);
+                for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+                    if (row == null) continue;
+
+                    try {
+                        String nombreCompleto = row.getCell(0).getStringCellValue();
+                        if (nombreCompleto == null || nombreCompleto.isEmpty()) continue;
+                        String correo = row.getCell(1).getStringCellValue();
+                        String nombreUsuario = generarNombreUsuario(nombreCompleto);
+                        String contrasena = generarContrasena();
+                        UsuarioDTO usuarioDTO = new UsuarioDTO(
+                                nombreCompleto,
+                                nombreUsuario,
+                                correo,
+                                contrasena,
+                                false,
+                                EnumRolUsuario.DOCENTE
+                        );
+                        registrarUsuario(usuarioDTO);
+                        usuarioDTOS.add(usuarioDTO);
+                    } catch (CustomException e) {
+                        log.error("Error procesando la fila {}: {}", i, e.getMessage());
+                        throw e;
+                    }
+                }
+            }
+            return usuarioDTOS;
+        } catch (CustomException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error al procesar archivo Excel", e);
+            throw new CustomException(EnumCodigos.ERROR_IMPORTAR_USUARIOS);
         }
-        return usuarioDTOS;
     }
 
     private String generarNombreUsuario(String nombreCompleto) {
-        String[] nombres = nombreCompleto.split(" ");
+        try{
+            String[] nombres = nombreCompleto.split(" ");
 
-        String primerNombre = nombres[0].toLowerCase();
-        String primerApellido = nombres[2].toLowerCase();
+            String primerNombre = nombres[0].toLowerCase();
+            String primerApellido = nombres[2].toLowerCase();
 
-        String nombreUsuario = "";
-        String baseUsuario = "";
-        for (int i = 1; i <= primerNombre.length(); i++) {
-            String letrasNombre = primerNombre.substring(0, i);
-            baseUsuario = letrasNombre + primerApellido;
+            String nombreUsuario = "";
+            String baseUsuario = "";
+            for (int i = 1; i <= primerNombre.length(); i++) {
+                String letrasNombre = primerNombre.substring(0, i);
+                baseUsuario = letrasNombre + primerApellido;
 
-            if (!usuarioRepositorio.findByNombreUsuario(baseUsuario).isPresent()) {
-                return baseUsuario;
+                if (!usuarioRepositorio.findByNombreUsuario(baseUsuario).isPresent()) {
+                    return baseUsuario;
+                }
             }
-        }
-        int contador = 1;
-        nombreUsuario = baseUsuario;
-        while (usuarioRepositorio.findByNombreUsuario(nombreUsuario).isPresent()) {
-            nombreUsuario = baseUsuario + contador;
-            contador++;
-        }
+            int contador = 1;
+            nombreUsuario = baseUsuario;
+            while (usuarioRepositorio.findByNombreUsuario(nombreUsuario).isPresent()) {
+                nombreUsuario = baseUsuario + contador;
+                contador++;
+            }
 
-        return nombreUsuario;
+            return nombreUsuario;
+        }catch (Exception e){
+            log.error("Error al generar nombre de usuario:", nombreCompleto);
+            throw new CustomException(EnumCodigos.ERROR_GENERAR_NOMBRE_USUARIO);
+        }
     }
 
 

@@ -10,8 +10,6 @@ import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class ErrorHandler {
-
-
     @ExceptionHandler(CustomException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
     public ErrorMessage handleCustomException(CustomException ex, WebRequest request) {
