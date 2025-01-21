@@ -36,7 +36,9 @@ public enum EnumCodigos {
     REPORTE_ERROR_GENERAR("EI019","Error al generar el reporte"),
     ARTICULO_ASIGNADO_NO_ELIMINABLE("EI020","Articulo Asigando no es posible eliminar"),
     ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF"),
-    ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito");
+    ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito"),
+    ERROR_USUARIO_SIN_ASIGNACIONES("EI023","El usuario no tiene asignaciones"),
+    ;
 
 
 

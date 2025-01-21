@@ -3,6 +3,7 @@ package com.facci.inventario.servicio;
 import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
@@ -48,7 +49,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -584,6 +587,107 @@ public class ArchivoService {
         List<ArticuloAsignacionDTO> datos = obtenerDetallesReporte();
         return generarExcel(datos);
     }
+    public ByteArrayOutputStream generarReporteExcelUsuario(long idUsuario, TipoRelacion tipoRelacion){
+        log.info("Generando reporte Excel");
+        List<ArticuloAsignacionDTO> datos = obtenerDetallesReporteUsuario(idUsuario, tipoRelacion);
+        return generarExcel(datos);
+    }
+    public ByteArrayOutputStream generarReporteExcelEstados(EstadoArticulo estado, String desde, String hasta){
+        log.info("Generando reporte Excel");
+        List<ArticuloAsignacionDTO> datos = obtenerDetallesReporteEstado(estado, desde, hasta);
+        return generarExcel(datos);
+    }
+
+    public List<ArticuloAsignacionDTO> obtenerDetallesReporteUsuario(long idUsuario, TipoRelacion tipoRelacion) {
+        log.info("Obteniendo detalles para reporte para usuario {}", idUsuario);
+        List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findByIdUsuarioAndTipoRelacion(idUsuario, tipoRelacion);
+        List<Long> articuloIds = asignaciones.stream()
+                .map(asignacion -> asignacion.getArticulo().getId())
+                .collect(Collectors.toList());
+        List<Articulo> articulos = (List<Articulo>) articuloRepositorio.findByIdIn(articuloIds);
+
+        Map<Long, ArticuloAsignacion> asignacionMap = asignaciones.stream()
+                .collect(Collectors.toMap(asignacion -> asignacion.getArticulo().getId(), asignacion -> asignacion));
+
+        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
+        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
+                .collect(Collectors.toMap(
+                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
+                        usuarioArea -> usuarioArea
+                ));
+
+        return articulos.stream().map(articulo -> {
+            log.info("Procesando articulo {}", articulo.getId());
+            ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
+            String clave = asignacion != null ? asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion() : null;
+            UsuarioAreaDTO areaUsuarioArea = clave != null ? areaUsuarioAreaMap.get(clave) : null;
+            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
+
+            dto.setNombreArticulo(articulo.getNombre());
+            dto.setCodigoInterno(articulo.getCodigoInterno());
+            dto.setCodigoOrigen(articulo.getCodigoOrigen());
+            dto.setMarcaArticulo(articulo.getMarca());
+            dto.setSerieArticulo(articulo.getSerie());
+            dto.setModeloArticulo(articulo.getModelo());
+            dto.setUbicacionArticulo(articulo.getUbicacion());
+            dto.setSeccionArticulo(articulo.getSeccion());
+            dto.setGrupoActivo(articulo.getGrupoActivo());
+            dto.setEstadoArticulo(articulo.getEstado());
+            dto.setDescripcion(articulo.getDescripcion());
+            dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
+            dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
+            dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
+            if (dto.getEstadoArticulo()==EstadoArticulo.DADO_BAJA || dto.getEstadoArticulo()==EstadoArticulo.REVISION_TECNICA){
+                dto.setFechaEstado(articulo.getModificadoFecha());
+            }
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    public List<ArticuloAsignacionDTO> obtenerDetallesReporteEstado(EstadoArticulo estado, String desde, String hasta) {
+        log.info("Obteniendo detalles para reporte de estado {}", estado);
+        LocalDateTime fechaDesde = LocalDateTime.parse(desde, DateTimeFormatter.ISO_DATE_TIME);
+        LocalDateTime fechaHasta = LocalDateTime.parse(hasta, DateTimeFormatter.ISO_DATE_TIME);
+
+        List<Articulo> articulos = articuloRepositorio.findByEstadoAndModificadoFechaBetween(estado, fechaDesde, fechaHasta);
+        List<ArticuloAsignacion> asignaciones = (List<ArticuloAsignacion>) articuloAsignacionRepositorio.findAll();
+
+        Map<Long, ArticuloAsignacion> asignacionMap = asignaciones.stream()
+                .collect(Collectors.toMap(asignacion -> asignacion.getArticulo().getId(), asignacion -> asignacion));
+
+        var areaUsuarioAreaTodos = configuracionService.consultarUsuarioAreaTodos();
+        Map<String, UsuarioAreaDTO> areaUsuarioAreaMap = areaUsuarioAreaTodos.stream()
+                .collect(Collectors.toMap(
+                        usuarioArea -> usuarioArea.getId() + "_" + usuarioArea.getTipoRelacion(),
+                        usuarioArea -> usuarioArea
+                ));
+
+        return articulos.stream().map(articulo -> {
+            log.info("Procesando articulo {}", articulo.getId());
+            ArticuloAsignacion asignacion = asignacionMap.get(articulo.getId());
+            String clave = asignacion != null ? asignacion.getIdUsuario() + "_" + asignacion.getTipoRelacion() : null;
+            UsuarioAreaDTO areaUsuarioArea = clave != null ? areaUsuarioAreaMap.get(clave) : null;
+            ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
+
+            dto.setNombreArticulo(articulo.getNombre());
+            dto.setCodigoInterno(articulo.getCodigoInterno());
+            dto.setCodigoOrigen(articulo.getCodigoOrigen());
+            dto.setMarcaArticulo(articulo.getMarca());
+            dto.setSerieArticulo(articulo.getSerie());
+            dto.setModeloArticulo(articulo.getModelo());
+            dto.setUbicacionArticulo(articulo.getUbicacion());
+            dto.setSeccionArticulo(articulo.getSeccion());
+            dto.setGrupoActivo(articulo.getGrupoActivo());
+            dto.setEstadoArticulo(articulo.getEstado());
+            dto.setDescripcion(articulo.getDescripcion());
+            dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
+            dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
+            dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
+            dto.setFechaEstado(articulo.getModificadoFecha());
+            return dto;
+
+        }).collect(Collectors.toList());
+    }
 
     public List<ArticuloAsignacionDTO> obtenerDetallesReporte() {
         log.info("Obteniendo detalles para reporte");
@@ -622,7 +726,9 @@ public class ArchivoService {
             dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
             dto.setTipoRelacion(asignacion != null ? asignacion.getTipoRelacion() : null);
             dto.setFechaAsignacion(asignacion != null ? asignacion.getFechaAsignacion() : null);
-
+            if (dto.getEstadoArticulo()==EstadoArticulo.DADO_BAJA || dto.getEstadoArticulo()==EstadoArticulo.REVISION_TECNICA){
+                dto.setFechaEstado(articulo.getModificadoFecha());
+            }
             return dto;
 
         }).collect(Collectors.toList());
@@ -639,9 +745,8 @@ public class ArchivoService {
         Row headerRow = sheet.createRow(0);
         String[] columnas = {
                 "Nombre Artículo", "Código Interno", "Código Origen", "Marca", "Serie", "Modelo", "Ubicación",
-                "Sección", "Grupo Activo", "Estado", "Descripción", "Nombre Asignado", "Tipo Relación", "Fecha Asignación"
+                "Sección", "Grupo Activo", "Estado", "Descripción", "Nombre Asignado", "Tipo Relación", "Fecha Asignación", "Fecha Dado Baja-Revisión Técnica"
         };
-
         for (int i = 0; i < columnas.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(columnas[i]);
@@ -665,6 +770,10 @@ public class ArchivoService {
             row.createCell(11).setCellValue(dto.getNombreAsignado() != null ? dto.getNombreAsignado() : "");
             row.createCell(12).setCellValue(dto.getTipoRelacion() != null ? dto.getTipoRelacion().name() : "");
             row.createCell(13).setCellValue(dto.getFechaAsignacion() != null ? dto.getFechaAsignacion().toString() : "");
+            row.createCell(14).setCellValue(dto.getEstadoArticulo() == EstadoArticulo.DADO_BAJA
+                    || dto.getEstadoArticulo() == EstadoArticulo.REVISION_TECNICA
+                    ? dto.getFechaEstado() != null ? dto.getFechaEstado().toString() : ""
+                    : "");
         }
         for (int i = 0; i < columnas.length; i++) {
             sheet.autoSizeColumn(i);

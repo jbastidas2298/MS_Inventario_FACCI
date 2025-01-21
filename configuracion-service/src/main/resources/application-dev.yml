@@ -27,3 +27,6 @@ logging:
 jwt:
   secret: $2a$10$vl2reM1tzZoGoMwRxymMneiNjyUqWiCdT4.fFMZbL2nFZNSZo8csy
   expiration: 86400000
+correo:
+  perfil: Monitoreo
+  portal: "http://localhost:4200/login"

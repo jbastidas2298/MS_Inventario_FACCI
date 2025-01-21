@@ -27,3 +27,6 @@ logging:
 jwt:
   secret: $2a$10$5Kndd1j0JbfdAFSuU0GTkO4PradBmrcPfMhD1u8kMkJdxP75k7n.O
   expiration: 86400000
+correo:
+  perfil: Monitoreo
+  portal: "https://facci-inventario/login"

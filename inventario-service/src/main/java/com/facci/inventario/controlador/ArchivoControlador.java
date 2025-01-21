@@ -1,9 +1,11 @@
 package com.facci.inventario.controlador;
 
 import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
 import com.facci.comun.response.ApiResponse;
 import com.facci.inventario.dto.ArticuloDTO;
+import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.servicio.ArchivoService;
 import com.facci.inventario.servicio.ArticuloService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -180,9 +182,34 @@ public class ArchivoControlador {
         }
     }
 
-    @GetMapping("/reporte-excel")
+    @GetMapping("/reporte-excel-completo")
     public ResponseEntity<byte[]> descargarReporteExcel() {
         ByteArrayOutputStream outputStream = archivoService.generarReporteExcel();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/reporte-excel-usuario")
+    public ResponseEntity<byte[]> descargarReporteExcel(
+            @RequestParam("id") long id,
+            @RequestParam("tipoRelacion") TipoRelacion tipoRelacion) {
+        ByteArrayOutputStream outputStream = archivoService.generarReporteExcelUsuario(id, tipoRelacion);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+    }
+
+    @PostMapping("/reporte-excel-estados")
+    public ResponseEntity<byte[]> descargarReporteExcelEstados(
+            @RequestParam("estado")EstadoArticulo estado,
+            @RequestParam("desde") String desde,
+            @RequestParam("hasta") String hasta) {
+        ByteArrayOutputStream outputStream = archivoService.generarReporteExcelEstados(estado, desde, hasta);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

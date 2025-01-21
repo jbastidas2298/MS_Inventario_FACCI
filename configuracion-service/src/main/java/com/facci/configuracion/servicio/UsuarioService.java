@@ -43,6 +43,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private UsuarioMapper usuarioMapper;
     private final AreaRepositorio areaRepositorio;
+    private final EmailService emailService;
 
     @Value("${spring.security.user.name}")
     private String adminUsername;
@@ -51,14 +52,16 @@ public class UsuarioService {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper, AreaRepositorio areaRepositorio) {
+    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper, AreaRepositorio areaRepositorio, EmailService emailService) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
         this.areaRepositorio = areaRepositorio;
+        this.emailService = emailService;
     }
 
     public ResponseEntity<?> registrar(UsuarioDTO usuarioDTO) {
+        String contraseña = usuarioDTO.getContrasena();
         var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(usuarioDTO.getNombreUsuario());
         if (usuarioOp.isPresent()) {
             log.error("Ya se encuentra registrado el usuario: {}", usuarioDTO.getNombreUsuario());
@@ -69,12 +72,14 @@ public class UsuarioService {
         usuarioDTO.setContrasena(encryptedPassword);
         Usuario nuevoUsuario = new Usuario(usuarioDTO);
         Usuario usuarioGuardado = usuarioRepositorio.save(nuevoUsuario);
+        emailService.enviarCorreo(usuarioDTO, contraseña);
         log.debug("Usuario registrado: {}", usuarioDTO.getNombreUsuario());
         return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioGuardado));
     }
 
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
+        String contraseña = usuarioDto.getContrasena();
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
         if (usuarioOp.isEmpty()) {
             String mensajeError = "Usuario no encontrado con id: " + usuarioDto.getId();
@@ -98,6 +103,7 @@ public class UsuarioService {
             usuarioRecargado.getRoles().addAll(nuevosRoles);
 
             Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
+            emailService.enviarCorreo(usuarioDto, contraseña);
             log.info("Usuario modificado: {}", usuarioActualizado.getNombreUsuario());
             return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioActualizado));
         } catch (Exception e) {

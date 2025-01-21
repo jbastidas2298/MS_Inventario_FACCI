@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4;">
+<div style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden;">
+    <div style="background: #30B86B; color: white; text-align: center; padding: 20px;">
+        <div style="background: #30B86B; color: white; text-align: center; padding: 20px;">
+            <h1 style="margin: 0; font-size: 24px;">Facultad de Ciencias de la Vida y Tecnologías </h1>
+            <h3 style="margin: 0; font-size: 18px;">Bienvenido al Sistema de Gestión de Inventario</h3>
+        </div>
+    </div>
+    <div  style="padding: 20px;">
+        <h3 style="color: #30B86B;">Estimado/a {{nombreCompleto}},</h3>
+        <p style="color: #555;">Sus credenciales de acceso son:</p>
+        <ul style="color: #333; list-style: none; padding: 0;">
+            <li><strong style="color: #30B86B;">Usuario:</strong> {{nombreUsuario}}</li>
+            <li><strong style="color: #30B86B;">Contraseña:</strong> {{contrasena}}</li>
+            <li><strong style="color: #30B86B;">Correo:</strong> {{correo}}</li>
+        </ul>
+        <p style="color: #555;">Para acceder al portal, haga clic en el siguiente enlace:</p>
+        <p><a href="{{portalUrl}}" style="color: #30B86B; text-decoration: none; font-weight: bold;">{{portalUrl}}</a></p>
+    </div>
+</div>
+</body>
+</html>

@@ -168,6 +168,7 @@ public class ArticuloService {
     }
 
     private void actualizarDatosArticulo(Articulo articulo, ArticuloDTO dto) {
+        articulo.setCodigoOrigen(dto.getCodigoOrigen());
         articulo.setNombre(dto.getNombre());
         articulo.setEstado(dto.getEstado());
         articulo.setMarca(dto.getMarca());
@@ -178,7 +179,6 @@ public class ArticuloService {
         articulo.setGrupoActivo(dto.getGrupoActivo());
         articulo.setObservacion(dto.getObservacion());
         articulo.setDescripcion(dto.getDescripcion());
-
     }
 
     private void registrarHistorial(Articulo articulo, TipoOperacion operacion) {
