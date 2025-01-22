@@ -17,7 +17,8 @@ BEGIN
             WHEN aa.tipo_relacion = 'USUARIO' THEN u.nombre_completo
             WHEN aa.tipo_relacion = 'AREA' THEN ar.nombre_area
             ELSE NULL
-        END AS nombre_asignado
+        END AS nombre_asignado,
+		a.estado as estadoArticulo
     FROM 
         facci_inventario..articulo a
     LEFT JOIN 

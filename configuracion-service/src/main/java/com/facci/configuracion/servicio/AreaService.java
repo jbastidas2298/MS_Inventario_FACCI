@@ -109,7 +109,7 @@ public class AreaService {
         List<Area> areas = StreamSupport.stream(iterable.spliterator(), false)
                 .collect(Collectors.toList());
         List<AreaDTO> areaDTOs = areas.stream()
-                .map(AreaDTO::new) // Convertir cada Area a un AreaDTO
+                .map(AreaDTO::new)
                 .collect(Collectors.toList());
 
         log.info("Consulta de todas las áreas realizada con éxito. Total de áreas: {}", areaDTOs.size());
@@ -118,7 +118,7 @@ public class AreaService {
 
 
 
-    public Area consultarArea(Long id) {
+    public AreaDTO consultarArea(Long id) {
         log.info("Intentando consultar el área con ID: {}", id);
         Area area = areaRepositorio.findById(id)
                 .orElseThrow(() -> {
@@ -126,6 +126,6 @@ public class AreaService {
                     return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
         log.info("Área consultada con éxito: {}", area);
-        return area;
+        return new AreaDTO(area);
     }
 }

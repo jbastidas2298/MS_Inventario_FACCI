@@ -136,4 +136,11 @@ public class ArticuloControlador {
         articuloAsignacionService.eliminarAsignacionesPorArticulo(id);
         return ResponseEntity.ok("Asignación eliminada exitosamente.");
     }
+
+    @GetMapping("/codigo/{codigo}")
+    @Operation(summary = "Consultar artículo por código", description = "Obtiene un artículo registrado en el sistema mediante su código")
+    public ResponseEntity<ArticuloAsignacionDTO> consultarArticuloPorCodigo(@PathVariable String codigo) {
+        var articulo = articuloAsignacionService.consultarArticuloAsignacion(codigo);
+        return ResponseEntity.ok(articulo);
+    }
 }

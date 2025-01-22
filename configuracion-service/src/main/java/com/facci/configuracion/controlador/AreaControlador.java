@@ -61,8 +61,8 @@ public class AreaControlador {
 
     @GetMapping("/{id}")
     @Operation(summary = "Consultar área por ID", description = "Obtiene un área registrada en el sistema")
-    public ResponseEntity<Area> consultarArea(@PathVariable Long id) {
-        Area area = areaService.consultarArea(id);
+    public ResponseEntity<AreaDTO> consultarArea(@PathVariable Long id) {
+        var area = areaService.consultarArea(id);
         return ResponseEntity.ok(area);
     }
 

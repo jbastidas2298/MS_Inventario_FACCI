@@ -1,5 +1,6 @@
 package com.facci.inventario.Configuracion;
 
+import com.facci.comun.dto.AreaDTO;
 import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.TipoRelacion;
@@ -118,6 +119,26 @@ public class ConfiguracionService {
         }
 
         return Optional.empty();
+    }
+
+    public AreaDTO consultarArea(Long id) {
+        log.info("Consultando usuario a configuracion");
+        String url = configuracionServiceUrl + "/configuraciones/area/" + id;
+        String token = obtenerTokenActual().orElseThrow(() -> new RuntimeException("No se encontró un token en la sesión actual"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<AreaDTO> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                AreaDTO.class
+        );
+
+        return response.getBody();
     }
 
 }

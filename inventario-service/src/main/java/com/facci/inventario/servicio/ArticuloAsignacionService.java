@@ -9,6 +9,7 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
+import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloCustomRepositorio;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 
@@ -159,13 +161,16 @@ public class ArticuloAsignacionService {
         log.info("Obteniendo IDs de artículos asignados al usuario en sesión");
         UsuarioDTO usuarioSesion = usuarioSesionService.usuarioCompleto();
         Long idUsuario = usuarioSesion.getId();
+
         List<ArticuloAsignacion> asignaciones = articuloAsignacionRepositorio.findByIdUsuario(idUsuario);
-        if (asignaciones.isEmpty()) {
+        List<ArticuloAsignacion> asignacionesArea = articuloAsignacionRepositorio.findAsignacionesAreasUsuario(idUsuario);
+        if (asignaciones.isEmpty() && asignacionesArea.isEmpty()) {
             log.info("No se encontraron asignaciones para el usuario con ID: {}", idUsuario);
             return Collections.emptyList();
         }
-        return asignaciones.stream()
+        return Stream.concat(asignaciones.stream(), asignacionesArea.stream())
                 .map(asignacion -> asignacion.getArticulo().getId())
+                .distinct()
                 .collect(Collectors.toList());
     }
 
@@ -188,5 +193,42 @@ public class ArticuloAsignacionService {
         );
         long totalElementos = articuloCustomRepositorio.contarAsignaciones(filterArticulo, filterUsuario);
         return new PageImpl<>(contenido, pageable, totalElementos);
+    }
+
+    public ArticuloAsignacionDTO consultarArticuloAsignacion(String codigo) {
+        log.info("Consultando artículo asignado con código: {}", codigo);
+        var articulo = articuloRepositorio.findByCodigoOrigen(codigo);
+        if (articulo == null) {
+            log.info("No se encontró el artículo con código interno: {}", codigo);
+            throw new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO);
+        }
+        ArticuloAsignacionDTO dto = new ArticuloAsignacionDTO();
+
+        var asignacion = articuloAsignacionRepositorio.findByArticuloId(articulo.get().getId());
+        if (!asignacion.isEmpty()) {
+            if(asignacion.get().getTipoRelacion() == TipoRelacion.USUARIO) {
+                var usuario = configuracionService.consultarUsuario(asignacion.get().getIdUsuario());
+                dto.setNombreAsignado(usuario.getNombreCompleto());
+            } else {
+                var usuarioArea = configuracionService.consultarUsuarioArea(asignacion.get().getIdUsuario(), asignacion.get().getTipoRelacion());
+                dto.setNombreAsignado(usuarioArea.getNombre());
+            }
+        }else {
+            dto.setNombreAsignado("No asignado");
+        }
+        dto.setCodigoInterno(articulo.get().getCodigoInterno());
+        dto.setCodigoOrigen(articulo.get().getCodigoOrigen());
+        dto.setFechaAsignacion(asignacion.get().getFechaAsignacion() == null ? null : asignacion.get().getFechaAsignacion());
+        dto.setTipoRelacion(asignacion.get().getTipoRelacion() == null ? null : asignacion.get().getTipoRelacion());
+        dto.setEstadoArticulo(articulo.get().getEstado());
+        dto.setNombreArticulo(articulo.get().getNombre());
+        dto.setMarcaArticulo(articulo.get().getMarca());
+        dto.setSerieArticulo(articulo.get().getSerie());
+        dto.setModeloArticulo(articulo.get().getModelo());
+        dto.setUbicacionArticulo(articulo.get().getUbicacion());
+        dto.setSeccionArticulo(articulo.get().getSeccion());
+        dto.setGrupoActivo(articulo.get().getGrupoActivo());
+        dto.setDescripcion(articulo.get().getDescripcion());
+        return dto;
     }
 }

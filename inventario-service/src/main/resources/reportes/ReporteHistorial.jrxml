@@ -100,7 +100,7 @@
 			<expression><![CDATA[$F{codigoOrigen}]]></expression>
 		</element>
 		<element kind="staticText" uuid="7314c7a5-7d28-4628-bae9-91a9eb2ad8c2" x="80" y="174" width="100" height="16" bold="true">
-			<text><![CDATA[Usuario Asignado:]]></text>
+			<text><![CDATA[Asignado:]]></text>
 		</element>
 		<element kind="staticText" uuid="0a7e8420-3376-4874-b14f-bd66f37f25fc" x="80" y="154" width="100" height="20" bold="true">
 			<text><![CDATA[Código Interno:]]></text>

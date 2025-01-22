@@ -1,5 +1,6 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.dto.AreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.enums.EnumRolUsuario;
@@ -230,7 +231,13 @@ public class ArticuloService {
         detalleDTO.setHistorial(historial);
 
         articuloAsignacionRepositorio.findByArticuloId(articuloId).ifPresent(asignacion -> {
-            UsuarioDTO usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
+            UsuarioDTO usuarioDTO = new UsuarioDTO();
+            if(asignacion.getTipoRelacion() == TipoRelacion.USUARIO) {
+                usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
+            }else{
+                AreaDTO areaDTO = configuracionService.consultarArea(asignacion.getIdUsuario());
+                usuarioDTO.setNombreCompleto(areaDTO.getNombreArea());
+            }
             detalleDTO.setUsuarioAsignado(usuarioDTO);
         });
 

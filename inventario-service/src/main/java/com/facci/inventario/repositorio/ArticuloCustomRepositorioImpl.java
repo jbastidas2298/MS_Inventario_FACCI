@@ -2,6 +2,7 @@ package com.facci.inventario.repositorio;
 
 import com.facci.comun.enums.TipoRelacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
+import com.facci.inventario.enums.EstadoArticulo;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
@@ -54,6 +55,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
             dto.setIdUsuario(row[5] != null ? ((Number) row[5]).longValue() : null);
             dto.setTipoRelacion(row[6] != null ? TipoRelacion.valueOf((String) row[6]) : null);
             dto.setNombreAsignado((String) row[7]);
+            dto.setEstadoArticulo(row[8] != null ? EstadoArticulo.valueOf((String) row[8]) : null);
             return dto;
         }).collect(Collectors.toList());
     }

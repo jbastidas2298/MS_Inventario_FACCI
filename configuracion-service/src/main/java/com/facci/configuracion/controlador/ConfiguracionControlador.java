@@ -3,6 +3,8 @@ package com.facci.configuracion.controlador;
 import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.TipoRelacion;
+import com.facci.configuracion.dto.AreaDTO;
+import com.facci.configuracion.servicio.AreaService;
 import com.facci.configuracion.servicio.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +20,12 @@ import java.util.List;
 public class ConfiguracionControlador {
 
     private final UsuarioService usuarioService;
+    private final AreaService areaService;
 
-    public ConfiguracionControlador(UsuarioService usuarioService){
+    public ConfiguracionControlador(UsuarioService usuarioService, AreaService areaService){
 
         this.usuarioService = usuarioService;
+        this.areaService = areaService;
     }
 
     @GetMapping("/{id}")
@@ -46,5 +50,12 @@ public class ConfiguracionControlador {
     @Operation(summary = "Consultar Usuario-Areas", description = "Obtiene un usuario registrado en el sistema")
     public ResponseEntity <List<UsuarioAreaDTO>>consultarUsuarioArea() {
         return usuarioService.consultarUsuarioAreaTodos();
+    }
+
+    @GetMapping("/area/{id}")
+    @Operation(summary = "Consultar area por ID", description = "Obtiene un area registrado en el sistema")
+    public ResponseEntity<AreaDTO> consultarArea(@PathVariable Long id) {
+        var area = areaService.consultarArea(id);
+        return ResponseEntity.ok(area);
     }
 }

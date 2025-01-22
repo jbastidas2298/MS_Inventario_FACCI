@@ -1,5 +1,6 @@
 package com.facci.inventario.servicio;
 
+import com.facci.comun.dto.AreaDTO;
 import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
@@ -370,7 +371,13 @@ public class ArchivoService {
 
         articuloAsignacionRepositorio.findByArticuloId(articuloId).ifPresent(asignacion -> {
             log.info("Consultando usuario a configuracion");
-            UsuarioDTO usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
+            UsuarioDTO usuarioDTO = new UsuarioDTO();
+            if(asignacion.getTipoRelacion() == TipoRelacion.USUARIO) {
+                usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
+            }else{
+                AreaDTO areaDTO = configuracionService.consultarArea(asignacion.getIdUsuario());
+                usuarioDTO.setNombreCompleto(areaDTO.getNombreArea());
+            }
             detalleDTO.setUsuarioAsignado(usuarioDTO);
         });
 
@@ -401,8 +408,8 @@ public class ArchivoService {
         List<Map<String, Object>> datos = new ArrayList<>();
         Map<String, Object> item = new HashMap<>();
         item.put("codigoBarra", codigoBarraStream);
-        item.put("codigoInterno", articuloDTO.getCodigoInterno());
-        item.put("codigoOrigen", articuloDTO.getCodigoOrigen());
+        item.put("codigoInterno", articuloDTO.getCodigoInterno() );
+        item.put("codigoOrigen", articuloDTO.getCodigoOrigen() != null ? articuloDTO.getCodigoOrigen() : "");
         item.put("usuarioAsignado", usuarioDTO != null && usuarioDTO.getNombreCompleto() != null ? usuarioDTO.getNombreCompleto() : "");
         item.put("nombreArticulo", articuloDTO.getNombre());
         item.put("logo", logoStream);
