@@ -43,8 +43,8 @@ public class SecurityConfig {
                 .authenticationManager(authenticationManager)
                 .securityContextRepository(securityContextRepository)
                 .authorizeExchange(exchange -> exchange
-                        .pathMatchers("/configuracion/login").permitAll() // Login público
                         .pathMatchers(HttpMethod.OPTIONS).permitAll()
+                        .pathMatchers("/configuracion/**").permitAll()
                         .anyExchange().authenticated() // Todo lo demás requiere autenticación
                 )
                 .build();

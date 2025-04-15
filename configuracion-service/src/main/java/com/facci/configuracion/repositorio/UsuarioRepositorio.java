@@ -9,8 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRepositorio extends BaseRepositorio<Usuario> {
-
     Optional<Usuario> findByNombreUsuario(String nombreUsuario);
     Page<Usuario> findByNombreCompletoContainingIgnoreCaseOrNombreUsuarioContainingIgnoreCase(
             String nombre, String codigoInterno, Pageable pageable);
+    Optional<Usuario> findByCorreoAndNombreUsuario(String correo, String nombreUsuario);
 }

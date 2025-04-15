@@ -1,10 +1,7 @@
 package com.facci.configuracion.dominio;
 
 import com.facci.comun.dto.UsuarioDTO;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -18,7 +15,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Usuario extends EntidadBase {
-
+    @Column(unique = true, nullable = false)
     private String nombreUsuario;
 
     private String contrasena;

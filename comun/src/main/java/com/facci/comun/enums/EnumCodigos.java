@@ -14,6 +14,9 @@ public enum EnumCodigos {
     ERROR_GENERAR_NOMBRE_USUARIO("EC008", "Error al generar nombre de usuario, solicitado minimo 1 nombre y 2 apellido"),
     ERROR_IMPORTAR_USUARIOS("EC009", "Error al importar usuarios"),
     ERROR_ACTUALIZAR_USUARIO("EC010", "Error al actualizar usuario"),
+    ERROR_RESTABLECER_CLAVE("EC011", "EL usuario con el correo ingresado no fue encontrado"),
+    ERROR_TOKEN("EC012", "El token no es valido o ha expirado"),
+    ERROR_RESTABLECER_CLAVE_TOKEN("EC013", "Error al restablecer la clave"),
     //Inventario
     ARTICULO_YA_EXISTE("EI001", "El artículo ya existe."),
     ARTICULO_NO_ENCONTRADO("EI002", "El artículo no fue encontrado."),

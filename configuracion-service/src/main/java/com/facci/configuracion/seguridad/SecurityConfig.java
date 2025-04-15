@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/configuracion/login",
+                                "/configuracion/restablecer-contrasena",
+                                "/configuracion/restablecer-contrasena/**",
                                 "/v3/api-docs/**",   // Permitir acceso a Swagger
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"

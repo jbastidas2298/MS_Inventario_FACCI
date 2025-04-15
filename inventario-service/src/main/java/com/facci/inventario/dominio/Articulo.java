@@ -3,6 +3,7 @@ package com.facci.inventario.dominio;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.enums.GrupoActivo;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -17,6 +18,7 @@ public class Articulo extends EntidadBase {
 
     private String codigoOrigen;
 
+    @Column(unique = true, nullable = false)
     private String codigoInterno;
 
     private String nombre;

@@ -72,7 +72,7 @@ public class UsuarioService {
         usuarioDTO.setContrasena(encryptedPassword);
         Usuario nuevoUsuario = new Usuario(usuarioDTO);
         Usuario usuarioGuardado = usuarioRepositorio.save(nuevoUsuario);
-        emailService.enviarCorreo(usuarioDTO, contraseña);
+        emailService.envioCredenciales(usuarioDTO, contraseña);
         log.debug("Usuario registrado: {}", usuarioDTO.getNombreUsuario());
         return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioGuardado));
     }
@@ -103,7 +103,7 @@ public class UsuarioService {
             usuarioRecargado.getRoles().addAll(nuevosRoles);
 
             Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
-            emailService.enviarCorreo(usuarioDto, contraseña);
+            emailService.envioCredenciales(usuarioDto, contraseña);
             log.info("Usuario modificado: {}", usuarioActualizado.getNombreUsuario());
             return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioActualizado));
         } catch (Exception e) {
