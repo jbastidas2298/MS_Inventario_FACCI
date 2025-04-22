@@ -96,4 +96,14 @@ public class UsuarioControlador {
         }
     }
 
+    @PutMapping("/actualizarClave/{id}")
+    @Operation(summary = "Actualizar clave de usuario", description = "Actualiza la clave de un usuario registrado en el sistema")
+    public ResponseEntity<?> actualizarClave(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String nuevaClave = request.get("nuevaClave");
+        var respuesta = usuarioService.actulizarClave(id, nuevaClave);
+        return ResponseEntity.ok(Map.of(
+                "respuesta", respuesta
+        ));
+    }
+
 }

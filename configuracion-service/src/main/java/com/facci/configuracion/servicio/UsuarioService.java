@@ -79,11 +79,10 @@ public class UsuarioService {
 
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
-        String contraseña = usuarioDto.getContrasena();
+        String clave = usuarioDto.getContrasena();
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
         if (usuarioOp.isEmpty()) {
-            String mensajeError = "Usuario no encontrado con id: " + usuarioDto.getId();
-            log.error(mensajeError);
+            log.error("Usuario no encontrado con id: {}", usuarioDto.getId());
             throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
         }
         var usuarioRecargado = usuarioOp.get();
@@ -93,8 +92,9 @@ public class UsuarioService {
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
             if(!usuarioDto.getContrasena().isEmpty()){
-                String encryptedPassword = passwordEncoder.encode(usuarioDto.getContrasena());
+                String encryptedPassword = passwordEncoder.encode(clave);
                 usuarioRecargado.setContrasena(encryptedPassword);
+                emailService.envioCredenciales(usuarioDto, clave);
             }
             usuarioRecargado.getRoles().clear();
             List<RolUsuario> nuevosRoles = usuarioDto.getRoles().stream()
@@ -103,7 +103,6 @@ public class UsuarioService {
             usuarioRecargado.getRoles().addAll(nuevosRoles);
 
             Usuario usuarioActualizado = usuarioRepositorio.save(usuarioRecargado);
-            emailService.envioCredenciales(usuarioDto, contraseña);
             log.info("Usuario modificado: {}", usuarioActualizado.getNombreUsuario());
             return ResponseEntity.ok(this.usuarioMapper.mapToDto(usuarioActualizado));
         } catch (Exception e) {
@@ -355,5 +354,23 @@ public class UsuarioService {
 
         Usuario nuevoUsuario = new Usuario(usuarioDTO);
         usuarioRepositorio.save(nuevoUsuario);
+    }
+
+    public boolean actulizarClave(long idUsuario, String clave){
+        var usuarioOp = this.usuarioRepositorio.findById(idUsuario);
+        if (usuarioOp.isEmpty()) {
+            log.error("Usuario no encontrado con id: " + idUsuario);
+            throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
+        }
+        try {
+            var usuarioRecargado = usuarioOp.get();
+            String encryptedPassword = passwordEncoder.encode(clave);
+            usuarioRecargado.setContrasena(encryptedPassword);
+            usuarioRepositorio.save(usuarioRecargado);
+            return true;
+        } catch (Exception e) {
+            log.error("Error al actualizar la clave del usuario con id: " + idUsuario, e);
+            throw new CustomException(EnumCodigos.ERROR_RESTABLECER_CLAVE);
+        }
     }
 }
