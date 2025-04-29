@@ -1,12 +1,7 @@
 package com.facci.inventario.dominio;
 
-import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.EstadoArticulo;
-import com.facci.inventario.enums.GrupoActivo;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.*;
 import lombok.*;
 
 @EqualsAndHashCode(callSuper = true)
@@ -40,7 +35,9 @@ public class Articulo extends EntidadBase {
     @Enumerated(EnumType.STRING)
     private EstadoArticulo estado;
 
-    @Enumerated(EnumType.STRING)
+
+    @ManyToOne
+    @JoinColumn(name = "grupo_activo_id")
     private GrupoActivo grupoActivo;
 
     public Articulo(String codigoOrigen, String codigoInterno, String nombre, String descripcion, String marca, String modelo, String serie,
@@ -57,20 +54,5 @@ public class Articulo extends EntidadBase {
         this.observacion = observacion;
         this.estado = estado != null ? estado : EstadoArticulo.DISPONIBLE;
         this.grupoActivo = grupoActivo;
-    }
-
-    public Articulo(ArticuloDTO articuloDTO) {
-        this.codigoOrigen = articuloDTO.getCodigoOrigen();
-        this.codigoInterno = articuloDTO.getCodigoInterno();
-        this.nombre = articuloDTO.getNombre();
-        this.descripcion = articuloDTO.getDescripcion();
-        this.marca = articuloDTO.getMarca();
-        this.modelo = articuloDTO.getModelo();
-        this.serie = articuloDTO.getSerie();
-        this.ubicacion = articuloDTO.getUbicacion();
-        this.seccion = articuloDTO.getSeccion();
-        this.observacion = articuloDTO.getObservacion();
-        this.estado = articuloDTO.getEstado() != null ? articuloDTO.getEstado() : EstadoArticulo.DISPONIBLE;
-        this.grupoActivo = articuloDTO.getGrupoActivo();
     }
 }

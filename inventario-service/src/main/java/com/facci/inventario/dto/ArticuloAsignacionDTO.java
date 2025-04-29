@@ -25,7 +25,7 @@ public class ArticuloAsignacionDTO {
     private String modeloArticulo;
     private String ubicacionArticulo;
     private String seccionArticulo;
-    private GrupoActivo grupoActivo;
+    private String grupoActivo;
     private String descripcion;
     private LocalDateTime fechaEstado;
 }

@@ -227,7 +227,7 @@ public class ArticuloAsignacionService {
         dto.setModeloArticulo(articulo.get().getModelo());
         dto.setUbicacionArticulo(articulo.get().getUbicacion());
         dto.setSeccionArticulo(articulo.get().getSeccion());
-        dto.setGrupoActivo(articulo.get().getGrupoActivo());
+        dto.setGrupoActivo(articulo.get().getGrupoActivo().getCodigo());
         dto.setDescripcion(articulo.get().getDescripcion());
         return dto;
     }

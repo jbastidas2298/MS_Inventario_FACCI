@@ -10,15 +10,12 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloArchivo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
+import com.facci.inventario.dominio.GrupoActivo;
 import com.facci.inventario.dto.*;
 import com.facci.inventario.enums.EstadoArticulo;
-import com.facci.inventario.enums.GrupoActivo;
 import com.facci.inventario.enums.TipoArchivo;
 import com.facci.inventario.map.ArticuloMapper;
-import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
-import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
-import com.facci.inventario.repositorio.ArticuloHistorialRepositorio;
-import com.facci.inventario.repositorio.ArticuloRepositorio;
+import com.facci.inventario.repositorio.*;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -72,8 +69,9 @@ public class ArchivoService {
     private final ArticuloAsignacionRepositorio articuloAsignacionRepositorio;
     private final ConfiguracionService configuracionService;
     private final ArticuloService articuloService;
+    private final GrupoActivoRepositorio grupoActivoRepositorio;
 
-    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService) {
+    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService, GrupoActivoRepositorio grupoActivoRepositorio) {
         this.articuloArchivoRepositorio = articuloArchivoRepositorio;
         this.articuloRepositorio = articuloRepositorio;
         this.usuarioSesionService = usuarioSesionService;
@@ -82,6 +80,7 @@ public class ArchivoService {
         this.articuloAsignacionRepositorio = articuloAsignacionRepositorio;
         this.configuracionService = configuracionService;
         this.articuloService = articuloService;
+        this.grupoActivoRepositorio = grupoActivoRepositorio;
     }
 
     public String guardarImagen(Long idArticulo, MultipartFile file) {
@@ -513,10 +512,11 @@ public class ArchivoService {
     }
 
     @Transactional
-    public List<ArticuloDTO> procesarExcel(MultipartFile file) throws Exception {
+    public List<ArticuloDTO> procesarExcel(MultipartFile file) {
         log.info("Procesando archivo Excel");
         List<ArticuloDTO> articuloDTOS = new ArrayList<>();
-        if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
+
+        if (file.isEmpty() || !Objects.requireNonNull(file.getOriginalFilename()).endsWith(".xlsx")) {
             throw new IllegalArgumentException("El archivo no es un Excel válido.");
         }
 
@@ -528,39 +528,42 @@ public class ArchivoService {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
-                try {
-                    ArticuloDTO articuloDTO = new ArticuloDTO();
-                    articuloDTO.setAsignarseArticulo(false);
-                    String nombreArticulo = getCellValueAsString(row.getCell(3));
-                    if (nombreArticulo == null || nombreArticulo.isEmpty()) continue;
-                    articuloDTO.setUbicacion(getCellValueAsString(row.getCell(0)));
-                    articuloDTO.setSeccion(getCellValueAsString(row.getCell(1)));
-                    String grupoActivoValue = getCellValueAsString(row.getCell(2)).toUpperCase().replace(" ", "_");
-                    articuloDTO.setGrupoActivo(GrupoActivo.valueOf(grupoActivoValue));
-                    articuloDTO.setNombre(nombreArticulo);
-                    articuloDTO.setMarca(getCellValueAsString(row.getCell(4)));
-                    articuloDTO.setModelo(getCellValueAsString(row.getCell(5)));
-                    articuloDTO.setSerie(getCellValueAsString(row.getCell(6)));
-                    String estadoValue = getCellValueAsString(row.getCell(7));
-                    switch (estadoValue) {
-                        case "B":
-                            articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
-                            break;
-                        case "M":
-                            articuloDTO.setEstado(EstadoArticulo.REVISION_TECNICA);
-                            break;
-                        default:
-                            articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
-                            break;
-                    }
-                    articuloDTO.setObservacion("Archivo Excel");
-                    articuloService.registrar(articuloDTO);
-                    articuloDTOS.add(articuloDTO);
+                ArticuloDTO articuloDTO = new ArticuloDTO();
+                articuloDTO.setAsignarseArticulo(false);
+                String nombreArticulo = getCellValueAsString(row.getCell(3));
+                if (nombreArticulo == null || nombreArticulo.isEmpty()) continue;
+                articuloDTO.setUbicacion(getCellValueAsString(row.getCell(0)));
+                articuloDTO.setSeccion(getCellValueAsString(row.getCell(1)));
+                String grupoActivoValue = getCellValueAsString(row.getCell(2)).toUpperCase().replace(" ", "_");
+                GrupoActivo grupoActivo = grupoActivoRepositorio.findByCodigo(grupoActivoValue)
+                        .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
 
-                } catch (Exception e) {
-                    log.error("Error procesando la fila " + (i + 1) + ": " + e.getMessage());
+                articuloDTO.setGrupoActivo(grupoActivo.getCodigo());
+                articuloDTO.setNombre(nombreArticulo);
+                articuloDTO.setMarca(getCellValueAsString(row.getCell(4)));
+                articuloDTO.setModelo(getCellValueAsString(row.getCell(5)));
+                articuloDTO.setSerie(getCellValueAsString(row.getCell(6)));
+
+                String estadoValue = getCellValueAsString(row.getCell(7));
+                switch (estadoValue) {
+                    case "B":
+                        articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
+                        break;
+                    case "M":
+                        articuloDTO.setEstado(EstadoArticulo.REVISION_TECNICA);
+                        break;
+                    default:
+                        articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
+                        break;
                 }
+
+                articuloDTO.setObservacion("Archivo Excel");
+                articuloService.registrar(articuloDTO,true);
+                articuloDTOS.add(articuloDTO);
             }
+        } catch (IOException e) {
+            log.error("Error al procesar el archivo Excel: {}", e.getMessage());
+            throw new RuntimeException("Error al procesar el archivo Excel.", e);
         }
         return articuloDTOS;
     }
@@ -638,7 +641,9 @@ public class ArchivoService {
             dto.setModeloArticulo(articulo.getModelo());
             dto.setUbicacionArticulo(articulo.getUbicacion());
             dto.setSeccionArticulo(articulo.getSeccion());
-            dto.setGrupoActivo(articulo.getGrupoActivo());
+            GrupoActivo grupoActivo = grupoActivoRepositorio.findByCodigo(articulo.getGrupoActivo().getCodigo())
+                    .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+            dto.setGrupoActivo(grupoActivo.getCodigo());
             dto.setEstadoArticulo(articulo.getEstado());
             dto.setDescripcion(articulo.getDescripcion());
             dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
@@ -684,7 +689,9 @@ public class ArchivoService {
             dto.setModeloArticulo(articulo.getModelo());
             dto.setUbicacionArticulo(articulo.getUbicacion());
             dto.setSeccionArticulo(articulo.getSeccion());
-            dto.setGrupoActivo(articulo.getGrupoActivo());
+            GrupoActivo grupoActivo = grupoActivoRepositorio.findByCodigo(articulo.getGrupoActivo().getCodigo())
+                    .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+            dto.setGrupoActivo(grupoActivo.getCodigo());
             dto.setEstadoArticulo(articulo.getEstado());
             dto.setDescripcion(articulo.getDescripcion());
             dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
@@ -727,7 +734,9 @@ public class ArchivoService {
             dto.setModeloArticulo(articulo.getModelo());
             dto.setUbicacionArticulo(articulo.getUbicacion());
             dto.setSeccionArticulo(articulo.getSeccion());
-            dto.setGrupoActivo(articulo.getGrupoActivo());
+            GrupoActivo grupoActivo = grupoActivoRepositorio.findByCodigo(articulo.getGrupoActivo().getCodigo())
+                    .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+            dto.setGrupoActivo(grupoActivo.getCodigo());
             dto.setEstadoArticulo(articulo.getEstado());
             dto.setDescripcion(articulo.getDescripcion());
             dto.setNombreAsignado(areaUsuarioArea != null ? areaUsuarioArea.getNombre() : null);
@@ -771,7 +780,7 @@ public class ArchivoService {
             row.createCell(5).setCellValue(dto.getModeloArticulo() != null ? dto.getModeloArticulo() : "");
             row.createCell(6).setCellValue(dto.getUbicacionArticulo() != null ? dto.getUbicacionArticulo() : "");
             row.createCell(7).setCellValue(dto.getSeccionArticulo() != null ? dto.getSeccionArticulo() : "");
-            row.createCell(8).setCellValue(dto.getGrupoActivo() != null ? dto.getGrupoActivo().name() : "");
+            row.createCell(8).setCellValue(dto.getGrupoActivo() != null ? dto.getGrupoActivo() : "");
             row.createCell(9).setCellValue(dto.getEstadoArticulo() != null ? dto.getEstadoArticulo().name() : "");
             row.createCell(10).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
             row.createCell(11).setCellValue(dto.getNombreAsignado() != null ? dto.getNombreAsignado() : "");

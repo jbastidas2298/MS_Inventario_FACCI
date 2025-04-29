@@ -173,13 +173,8 @@ public class ArchivoControlador {
     @PostMapping("/importar-excel")
     @Operation(summary = "Articulos Excel", description = "Importa masivamente articulos desde formato excel")
     public ResponseEntity<List<ArticuloDTO>> importarExcel(@RequestParam("file") MultipartFile file) {
-        try {
             var usuariosProcesados= archivoService.procesarExcel(file);
             return ResponseEntity.ok(usuariosProcesados);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
-        }
     }
 
     @GetMapping("/reporte-excel-completo")

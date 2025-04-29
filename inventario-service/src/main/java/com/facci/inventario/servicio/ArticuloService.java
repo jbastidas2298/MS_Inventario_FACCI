@@ -9,13 +9,11 @@ import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
+import com.facci.inventario.dominio.GrupoActivo;
 import com.facci.inventario.dto.*;
 import com.facci.inventario.enums.*;
 import com.facci.inventario.map.ArticuloMapper;
-import com.facci.inventario.repositorio.ArticuloArchivoRepositorio;
-import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
-import com.facci.inventario.repositorio.ArticuloHistorialRepositorio;
-import com.facci.inventario.repositorio.ArticuloRepositorio;
+import com.facci.inventario.repositorio.*;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -41,8 +39,9 @@ public class ArticuloService {
     private final ArticuloAsignacionRepositorio articuloAsignacionRepositorio;
     private final ArticuloArchivoRepositorio articuloArchivoRepositorio;
     private final ArticuloHistorialRepositorio articuloHistorialRepositorio;
+    private final GrupoActivoRepositorio grupoActivoRepositorio;
 
-    public ArticuloService(ArticuloRepositorio articuloRepositorio, ArticuloMapper articuloMapper, SecuencialService secuencialService, ArticuloHistorialService articuloHistorialService, ConfiguracionService configuracionService, ArticuloAsignacionService articuloAsignacionService, UsuarioSesionService usuarioSesionService, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloHistorialRepositorio articuloHistorialRepositorio) {
+    public ArticuloService(ArticuloRepositorio articuloRepositorio, ArticuloMapper articuloMapper, SecuencialService secuencialService, ArticuloHistorialService articuloHistorialService, ConfiguracionService configuracionService, ArticuloAsignacionService articuloAsignacionService, UsuarioSesionService usuarioSesionService, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloHistorialRepositorio articuloHistorialRepositorio, GrupoActivoRepositorio grupoActivoRepositorio) {
         this.articuloRepositorio = articuloRepositorio;
         this.articuloMapper = articuloMapper;
         this.secuencialService = secuencialService;
@@ -53,10 +52,11 @@ public class ArticuloService {
         this.articuloAsignacionRepositorio = articuloAsignacionRepositorio;
         this.articuloArchivoRepositorio = articuloArchivoRepositorio;
         this.articuloHistorialRepositorio = articuloHistorialRepositorio;
+        this.grupoActivoRepositorio = grupoActivoRepositorio;
     }
 
 
-    public ArticuloDTO registrar(ArticuloDTO dto) {
+    public ArticuloDTO registrar(ArticuloDTO dto, boolean excel) {
         log.info("Registrando nuevo artículo: {}", dto.getNombre());
         try {
             if(dto.getCodigoOrigen() != null){
@@ -66,7 +66,7 @@ public class ArticuloService {
             String secuencial = secuencialService.generarSecuencial("Articulo");
             dto.setCodigoInterno(secuencial);
 
-            Articulo articuloGuardado = guardarArticulo(dto);
+            Articulo articuloGuardado = guardarArticulo(dto, excel);
 
             UsuarioDTO usuarioSesion = obtenerUsuarioSesion();
             registrarHistorialYAsignar(dto, articuloGuardado, usuarioSesion, TipoOperacion.INGRESO);
@@ -76,8 +76,8 @@ public class ArticuloService {
         }catch (Exception e){
             throw new CustomException(EnumCodigos.ARTICULO_ERROR_REGISTRAR);
         }
-
     }
+
 
     public ArticuloDTO actualizar(ArticuloDTO dto) {
         Articulo articuloExistente = obtenerArticuloPorId(dto.getId());
@@ -137,8 +137,28 @@ public class ArticuloService {
         }
     }
 
-    private Articulo guardarArticulo(ArticuloDTO dto) {
-        Articulo nuevoArticulo = new Articulo(dto);
+    private Articulo guardarArticulo(ArticuloDTO dto, boolean excel) {
+        GrupoActivo grupoActivo;
+        if (excel) {
+            grupoActivo = grupoActivoRepositorio.findByCodigo(dto.getGrupoActivo())
+                    .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+        }else{
+            grupoActivo = grupoActivoRepositorio.findById(Long.parseLong(dto.getGrupoActivo()))
+                    .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+        }
+        Articulo nuevoArticulo = new Articulo();
+        nuevoArticulo.setCodigoOrigen(dto.getCodigoOrigen());
+        nuevoArticulo.setCodigoInterno(dto.getCodigoInterno());
+        nuevoArticulo.setNombre(dto.getNombre());
+        nuevoArticulo.setDescripcion(dto.getDescripcion());
+        nuevoArticulo.setMarca(dto.getMarca());
+        nuevoArticulo.setModelo(dto.getModelo());
+        nuevoArticulo.setSerie(dto.getSerie());
+        nuevoArticulo.setUbicacion(dto.getUbicacion());
+        nuevoArticulo.setSeccion(dto.getSeccion());
+        nuevoArticulo.setObservacion(dto.getObservacion());
+        nuevoArticulo.setEstado(dto.getEstado() != null ? dto.getEstado() : EstadoArticulo.DISPONIBLE);
+        nuevoArticulo.setGrupoActivo(grupoActivo);
         return articuloRepositorio.save(nuevoArticulo);
     }
 
@@ -177,7 +197,9 @@ public class ArticuloService {
         articulo.setSerie(dto.getSerie());
         articulo.setSeccion(dto.getSeccion());
         articulo.setUbicacion(dto.getUbicacion());
-        articulo.setGrupoActivo(dto.getGrupoActivo());
+        var grupoActivo = grupoActivoRepositorio.findById(Long.parseLong(dto.getGrupoActivo()))
+                .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
+        articulo.setGrupoActivo(grupoActivo);
         articulo.setObservacion(dto.getObservacion());
         articulo.setDescripcion(dto.getDescripcion());
     }

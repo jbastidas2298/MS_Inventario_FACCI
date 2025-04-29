@@ -43,7 +43,10 @@ public class UsuarioControlador {
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar un usuario existente", description = "Elimina un usuario ya registrado en el sistema")
     public ResponseEntity<?> eliminar(@PathVariable Long id) {
-        return usuarioService.eliminar(id);
+        var respuesta= usuarioService.eliminar(id);
+        return ResponseEntity.ok(Map.of(
+                "respuesta", respuesta
+        ));
     }
 
     @GetMapping

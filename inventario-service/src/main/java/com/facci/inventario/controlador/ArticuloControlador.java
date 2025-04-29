@@ -39,7 +39,7 @@ public class ArticuloControlador {
     @PostMapping
     @Operation(summary = "Registrar un nuevo artículo", description = "Registra un nuevo artículo en el sistema")
     public ResponseEntity<ArticuloDTO> registrar(@RequestBody ArticuloDTO dto) {
-        ArticuloDTO articuloRegistrado = articuloService.registrar(dto);
+        ArticuloDTO articuloRegistrado = articuloService.registrar(dto,false);
         return ResponseEntity.ok(articuloRegistrado);
     }
 

@@ -1,9 +1,6 @@
 package com.facci.inventario.dto;
 
 import com.facci.inventario.enums.EstadoArticulo;
-import com.facci.inventario.enums.GrupoActivo;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +24,5 @@ public class ArticuloDTO {
     private String serie;
     private String ubicacion;
     private String seccion;
-    private GrupoActivo grupoActivo;
+    private String grupoActivo;
 }

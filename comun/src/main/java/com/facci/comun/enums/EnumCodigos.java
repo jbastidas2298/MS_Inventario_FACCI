@@ -41,6 +41,7 @@ public enum EnumCodigos {
     ERROR_COMBINAR_PDFS("EI021","Error al combinar PDF"),
     ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito"),
     ERROR_USUARIO_SIN_ASIGNACIONES("EI023","El usuario no tiene asignaciones"),
+    GRUPO_ACTIVO_NO_ENCONTRADO("EI024","Grupo Activo no encontrado"),
     ;
 
 

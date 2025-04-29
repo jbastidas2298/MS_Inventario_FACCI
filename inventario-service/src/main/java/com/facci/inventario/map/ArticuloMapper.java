@@ -45,9 +45,10 @@ public class ArticuloMapper {
                 .serie(articulo.getSerie())
                 .ubicacion(articulo.getUbicacion())
                 .seccion(articulo.getSeccion())
-                .grupoActivo(articulo.getGrupoActivo())
+                .grupoActivo(String.valueOf(articulo.getGrupoActivo().getId()))
                 .estado(articulo.getEstado())
                 .observacion(articulo.getObservacion())
                 .build();
     }
+
 }

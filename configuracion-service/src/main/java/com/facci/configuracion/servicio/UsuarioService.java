@@ -113,7 +113,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public ResponseEntity<?> eliminar(Long id) {
+    public boolean eliminar(Long id) {
         var usuarioOp = this.usuarioRepositorio.findById(id);
 
         if (usuarioOp.isEmpty()) {
@@ -124,8 +124,7 @@ public class UsuarioService {
         try {
             usuarioRepositorio.delete(usuarioOp.get());
             log.info("Usuario eliminado con id: {}", id);
-            ApiResponse response = new ApiResponse(EnumCodigos.USUARIO_ELIMINADO, null);
-            return ResponseEntity.ok(response);
+            return true;
         } catch (Exception e) {
             String mensajeError = "Error al eliminar el usuario con id: " + id;
             log.error(mensajeError, e);
