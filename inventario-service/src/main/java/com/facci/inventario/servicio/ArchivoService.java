@@ -34,6 +34,10 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.core.io.UrlResource;
@@ -70,8 +74,8 @@ public class ArchivoService {
     private final ConfiguracionService configuracionService;
     private final ArticuloService articuloService;
     private final GrupoActivoRepositorio grupoActivoRepositorio;
-
-    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService, GrupoActivoRepositorio grupoActivoRepositorio) {
+    private final ArticuloCustomRepositorio articuloCustomRepositorio;
+    public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService, GrupoActivoRepositorio grupoActivoRepositorio, ArticuloCustomRepositorio articuloCustomRepositorio) {
         this.articuloArchivoRepositorio = articuloArchivoRepositorio;
         this.articuloRepositorio = articuloRepositorio;
         this.usuarioSesionService = usuarioSesionService;
@@ -81,6 +85,7 @@ public class ArchivoService {
         this.configuracionService = configuracionService;
         this.articuloService = articuloService;
         this.grupoActivoRepositorio = grupoActivoRepositorio;
+        this.articuloCustomRepositorio = articuloCustomRepositorio;
     }
 
     public String guardarImagen(Long idArticulo, MultipartFile file) {
@@ -808,5 +813,37 @@ public class ArchivoService {
         }
         log.info("Finalizando generación de reporte Excel");
         return outputStream;
+    }
+
+    public Page<ArticuloAsignacionDTO> generarPreliminarInventario(Optional<Integer> page,Optional<Integer> size,EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+        log.info("Generando reporte preliminar Excel");
+        return obtenerDetallesReporteFiltros(page,size ,estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+    }
+
+    public Page<ArticuloAsignacionDTO> obtenerDetallesReporteFiltros(Optional<Integer> page, Optional<Integer> size, EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion, String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+        log.info("Obteniendo detalles para reporte con filtros: estado={}, usuario={}, tipoRelacion={}, grupoActivo={}, nombre={}, marca={}, edificio={}, seccion={}",
+                estado, usuario, tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+
+        int pageNumber = page.orElse(0);
+        int pageSize = size.orElse(10);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize);
+        List<ArticuloAsignacionDTO> contenido = articuloCustomRepositorio.obtenerAsignacionesFiltrosCompletos(
+                usuario,estado,grupoActivo,nombre,marca,edificio,seccion,
+                pageNumber * pageSize,
+                pageSize
+        );
+        long totalElementos = articuloCustomRepositorio.contarAsignacionesFiltros(usuario,estado,grupoActivo,nombre,marca,edificio,seccion);
+        return new PageImpl<>(contenido, pageable, totalElementos);
+    }
+
+    public ByteArrayOutputStream generarReporteInventario(EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+            log.info("Generando reporte Excel");
+            List<ArticuloAsignacionDTO> datos = articuloCustomRepositorio.obtenerAsignacionesFiltrosCompletos(
+                    usuario, estado, grupoActivo, nombre, marca, edificio, seccion,
+                    0,
+                    Integer.MAX_VALUE
+            );
+            return generarExcel(datos);
+
     }
 }

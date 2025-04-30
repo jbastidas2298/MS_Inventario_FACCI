@@ -4,6 +4,7 @@ import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
 import com.facci.comun.response.ApiResponse;
+import com.facci.inventario.dto.ArticuloAsignacionDTO;
 import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.servicio.ArchivoService;
@@ -11,6 +12,7 @@ import com.facci.inventario.servicio.ArticuloService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/inventario/articulo/archivo")
@@ -209,6 +212,40 @@ public class ArchivoControlador {
         headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
+        return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/preliminar-inventario")
+    public Page<ArticuloAsignacionDTO> getPreliminarInventario(
+            @RequestParam Optional<Integer> page,
+            @RequestParam Optional<Integer> size,
+            @RequestParam(required = false) EstadoArticulo estado,
+            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) TipoRelacion tipoRelacion,
+            @RequestParam(required = false) String grupoActivo,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) String edificio,
+            @RequestParam(required = false) String seccion) {
+
+        return archivoService.generarPreliminarInventario(page,size,
+                        estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+    }
+
+    @PostMapping("/reporte-inventario")
+    public ResponseEntity<byte[]>  reporterInventario(
+            @RequestParam(required = false) EstadoArticulo estado,
+            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) TipoRelacion tipoRelacion,
+            @RequestParam(required = false) String grupoActivo,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String marca,
+            @RequestParam(required = false) String edificio,
+            @RequestParam(required = false) String seccion) {
+        ByteArrayOutputStream outputStream = archivoService.generarReporteInventario(estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
+        headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
     }
 }
