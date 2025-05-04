@@ -1,0 +1,46 @@
+server:
+  port: 8097
+  ssl:
+    enabled: true
+    key-store: classpath:certificados/keystore.p12
+    key-store-password: realhulk97
+    key-store-type: PKCS12
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "https://144.126.208.53"
+            allowedHeaders:
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+      routes:
+        - id: configuracion-service
+          uri: http://configuracion-service:8099
+          predicates:
+            - Path=/configuracion/**
+        - id: inventario-service
+          uri: http://inventario-service:8098
+          predicates:
+            - Path=/inventario/**
+logging:
+  level:
+    root: INFO
+    com.facci: DEBUG
+    org.springframework.security: DEBUG
+  file:
+    name: gateway-service/logs/gateway-service.log
+  pattern:
+    file: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+jwt:
+  secret: $2a$10$5Kndd1j0JbfdAFSuU0GTkO4PradBmrcPfMhD1u8kMkJdxP75k7n.O
+  expiration: 86400000
+cors:
+  allowed-origins: "https://144.126.208.53"

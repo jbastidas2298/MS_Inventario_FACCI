@@ -13,6 +13,7 @@ import com.facci.configuracion.map.UsuarioMapper;
 import com.facci.configuracion.repositorio.AreaRepositorio;
 import com.facci.configuracion.repositorio.UsuarioRepositorio;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -258,6 +259,7 @@ public class UsuarioService {
 
     @Transactional
     public List<UsuarioDTO> procesarExcel(MultipartFile file) throws Exception {
+        DataFormatter formatter = new DataFormatter();
         try {
             List<UsuarioDTO> usuarioDTOS = new ArrayList<>();
             if (file.isEmpty() || !file.getOriginalFilename().endsWith(".xlsx")) {
@@ -270,10 +272,10 @@ public class UsuarioService {
                     if (row == null) continue;
 
                     try {
-                        String nombreCompleto = row.getCell(0).getStringCellValue();
+                        String nombreCompleto = formatter.formatCellValue(row.getCell(0));
                         if (nombreCompleto == null || nombreCompleto.isEmpty()) continue;
-                        String correo = row.getCell(1).getStringCellValue();
-                        String nombreUsuario = generarNombreUsuario(nombreCompleto);
+                        String nombreUsuario = formatter.formatCellValue(row.getCell(1));
+                        String correo = formatter.formatCellValue(row.getCell(2));
                         String contrasena = generarContrasena();
                         UsuarioDTO usuarioDTO = new UsuarioDTO(
                                 nombreCompleto,
