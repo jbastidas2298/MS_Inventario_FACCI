@@ -213,13 +213,15 @@ public class ArticuloAsignacionService {
                 var usuarioArea = configuracionService.consultarUsuarioArea(asignacion.get().getIdUsuario(), asignacion.get().getTipoRelacion());
                 dto.setNombreAsignado(usuarioArea.getNombre());
             }
+            dto.setFechaAsignacion(asignacion.get().getFechaAsignacion() == null ? null : asignacion.get().getFechaAsignacion());
+            dto.setTipoRelacion(asignacion.get().getTipoRelacion() == null ? null : asignacion.get().getTipoRelacion());
         }else {
             dto.setNombreAsignado("No asignado");
+            dto.setFechaAsignacion(null);
+            dto.setTipoRelacion(null);
         }
         dto.setCodigoInterno(articulo.get().getCodigoInterno());
         dto.setCodigoOrigen(articulo.get().getCodigoOrigen());
-        dto.setFechaAsignacion(asignacion.get().getFechaAsignacion() == null ? null : asignacion.get().getFechaAsignacion());
-        dto.setTipoRelacion(asignacion.get().getTipoRelacion() == null ? null : asignacion.get().getTipoRelacion());
         dto.setEstadoArticulo(articulo.get().getEstado());
         dto.setNombreArticulo(articulo.get().getNombre());
         dto.setMarcaArticulo(articulo.get().getMarca());
