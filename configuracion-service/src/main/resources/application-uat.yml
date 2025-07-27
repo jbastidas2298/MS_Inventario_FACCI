@@ -29,4 +29,4 @@ jwt:
   expiration: 86400000
 correo:
   perfil: Monitoreo
-  portal: "https://144.126.208.53/login"
+  portal: "https://20.169.252.58/login"
