@@ -45,6 +45,7 @@ public class UsuarioService {
     private UsuarioMapper usuarioMapper;
     private final AreaRepositorio areaRepositorio;
     private final EmailService emailService;
+    private final AsignacionService asignacionService;
 
     @Value("${spring.security.user.name}")
     private String adminUsername;
@@ -53,12 +54,13 @@ public class UsuarioService {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper, AreaRepositorio areaRepositorio, EmailService emailService) {
+    public UsuarioService(UsuarioRepositorio usuarioRepositorio, PasswordEncoder passwordEncoder, UsuarioMapper usuarioMapper, AreaRepositorio areaRepositorio, EmailService emailService, AsignacionService asignacionService) {
         this.usuarioRepositorio = usuarioRepositorio;
         this.passwordEncoder = passwordEncoder;
         this.usuarioMapper = usuarioMapper;
         this.areaRepositorio = areaRepositorio;
         this.emailService = emailService;
+        this.asignacionService = asignacionService;
     }
 
     public ResponseEntity<?> registrar(UsuarioDTO usuarioDTO) {
@@ -121,6 +123,14 @@ public class UsuarioService {
             String mensajeError = "Usuario no encontrado con id: " + id;
             log.error(mensajeError);
             throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
+        }
+        if (asignacionService.existeAsignacionAreaParaUsuario(TipoRelacion.USUARIO, id)) {
+            log.error("Error al eliminar. El usuario con ID: {} tiene asignaciones asociadas.", id);
+            throw new CustomException(EnumCodigos.AREA_TIENE_ASIGNACIONES);
+        }
+        if(areaRepositorio.findByUsuarioEncargado(usuarioOp.get()).isPresent()){
+            log.error("Error al eliminar. El usuario con ID: {} es el encargado de un área.", id);
+            throw new CustomException(EnumCodigos.USUARIO_TIENE_AREA_ASIGNADA);
         }
         try {
             usuarioRepositorio.delete(usuarioOp.get());

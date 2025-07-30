@@ -1,6 +1,7 @@
 package com.facci.configuracion.servicio;
 
 import com.facci.comun.enums.EnumCodigos;
+import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
 import com.facci.configuracion.dominio.Area;
 import com.facci.configuracion.dominio.Usuario;
@@ -23,10 +24,12 @@ public class AreaService {
 
     private final AreaRepositorio areaRepositorio;
     private final UsuarioRepositorio usuarioRepositorio;
+    private final AsignacionService asignacionService;
 
-    public AreaService(AreaRepositorio areaRepositorio, UsuarioRepositorio usuarioRepositorio) {
+    public AreaService(AreaRepositorio areaRepositorio, UsuarioRepositorio usuarioRepositorio, AsignacionService asignacionService) {
         this.areaRepositorio = areaRepositorio;
         this.usuarioRepositorio = usuarioRepositorio;
+        this.asignacionService = asignacionService;
     }
 
     @Transactional
@@ -59,9 +62,6 @@ public class AreaService {
         return respuesta;
     }
 
-
-
-
     @Transactional
     public Area actualizar(AreaDTO areaDTO) {
         log.info("Intentando actualizar el área con ID: {}", areaDTO.getId());
@@ -88,7 +88,6 @@ public class AreaService {
         return areaActualizada;
     }
 
-
     @Transactional
     public void eliminar(Long id) {
         log.info("Intentando eliminar el área con ID: {}", id);
@@ -97,6 +96,10 @@ public class AreaService {
                     log.error("Error al eliminar. Área no encontrada con ID: {}", id);
                     return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
+        if (asignacionService.existeAsignacionAreaParaUsuario(TipoRelacion.AREA, id)) {
+            log.error("Error al eliminar. El área con ID: {} tiene asignaciones asociadas.", id);
+            throw new CustomException(EnumCodigos.AREA_TIENE_ASIGNACIONES);
+        }
         areaRepositorio.delete(area);
         log.info("Área eliminada con éxito. ID: {}", id);
     }
@@ -115,8 +118,6 @@ public class AreaService {
         log.info("Consulta de todas las áreas realizada con éxito. Total de áreas: {}", areaDTOs.size());
         return areaDTOs;
     }
-
-
 
     public AreaDTO consultarArea(Long id) {
         log.info("Intentando consultar el área con ID: {}", id);

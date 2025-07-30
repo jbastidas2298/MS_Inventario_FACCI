@@ -17,6 +17,9 @@ public enum EnumCodigos {
     ERROR_RESTABLECER_CLAVE("EC011", "EL usuario con el correo ingresado no fue encontrado"),
     ERROR_TOKEN("EC012", "El token no es valido o ha expirado"),
     ERROR_RESTABLECER_CLAVE_TOKEN("EC013", "Error al restablecer la clave"),
+    AREA_TIENE_ASIGNACIONES("EC014", "El área tiene artículos asignados y no puede ser eliminada."),
+    USUARIO_TIENE_ASIGNACIONES("EC015", "El usuario artículos asignados y no puede ser eliminado."),
+    USUARIO_TIENE_AREA_ASIGNADA("EC016", "El usuario tiene un área asignada y no puede ser eliminado."),
     //Inventario
     ARTICULO_YA_EXISTE("EI001", "El artículo ya existe."),
     ARTICULO_NO_ENCONTRADO("EI002", "El artículo no fue encontrado."),
