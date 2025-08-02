@@ -124,6 +124,25 @@ public class ArchivoService {
         }
     }
 
+    @Transactional
+    public boolean eliminarArchivo(long id){
+        log.info("Eliminando archivo con ID: {}", id);
+        ArticuloArchivo articuloArchivo = articuloArchivoRepositorio.findById(id)
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARCHIVO_NO_ENCONTRADO));
+
+        try {
+            Path rutaArchivo = Paths.get(articuloArchivo.getPath());
+            if (Files.exists(rutaArchivo)) {
+                Files.delete(rutaArchivo);
+            }
+            articuloArchivoRepositorio.delete(articuloArchivo);
+            return true;
+        } catch (IOException e) {
+            log.error("Error al eliminar el archivo: {}", e.getMessage());
+            throw new CustomException(EnumCodigos.ARCHIVO_ERROR_ELIMINAR);
+        }
+    }
+
     public Resource obtenerArchivo(String path) {
         return articuloArchivoRepositorio.findByPath(path)
                 .map(this::cargarArchivo)

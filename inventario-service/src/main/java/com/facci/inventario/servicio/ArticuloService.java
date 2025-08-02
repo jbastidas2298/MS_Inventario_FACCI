@@ -236,6 +236,7 @@ public class ArticuloService {
         List<ArticuloArchivoDTO> archivos = articuloArchivoRepositorio.findByArticuloId(articuloId).stream()
                 .map(archivo -> {
                     ArticuloArchivoDTO archivoDTO = new ArticuloArchivoDTO();
+                    archivoDTO.setId(archivo.getId());
                     archivoDTO.setPath(archivo.getPath());
                     archivoDTO.setTipo(archivo.getTipo());
                     return archivoDTO;

@@ -45,8 +45,8 @@ public enum EnumCodigos {
     ARCHIVO_SUBIDO_EXITO("EI022","Archivo cargado con exito"),
     ERROR_USUARIO_SIN_ASIGNACIONES("EI023","El usuario no tiene asignaciones"),
     GRUPO_ACTIVO_NO_ENCONTRADO("EI024","Grupo Activo no encontrado"),
+    ARCHIVO_ERROR_ELIMINAR("EI025","Error al eliminar el archivo"),
     ;
-
 
 
     private final String codigo;

@@ -248,4 +248,21 @@ public class ArchivoControlador {
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return new ResponseEntity<>(outputStream.toByteArray(), headers, HttpStatus.OK);
     }
+
+    @DeleteMapping("/eliminar/{id}")
+    @Operation(summary = "Eliminar archivo de un artículo", description = "Permite eliminar un archivo asociada a un artículo mediante su ID")
+    public  ResponseEntity<?> eliminarArchivo(@PathVariable Long id) {
+        try {
+            var respuesta= archivoService.eliminarArchivo(id);
+            return ResponseEntity.ok(Map.of(
+                    "respuesta", respuesta
+            ));
+        } catch (CustomException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno: " + e.getMessage()));
+        }
+    }
 }

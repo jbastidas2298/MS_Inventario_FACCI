@@ -10,6 +10,7 @@ import lombok.*;
 @Getter
 @Setter
 public class ArticuloArchivoDTO {
+    private long id;
     private String path;
     private TipoArchivo tipo;
 }
