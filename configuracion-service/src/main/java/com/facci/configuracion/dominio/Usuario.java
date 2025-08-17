@@ -26,13 +26,16 @@ public class Usuario extends EntidadBase {
 
     private String nombreCompleto;
 
+    private String identificacion;
+
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<RolUsuario> roles = new ArrayList<>();
 
-    public Usuario(String nombreCompleto,String nombreUsuario, String correo, String contrasena) {
+    public Usuario(String nombreCompleto,String nombreUsuario, String correo, String contrasena, String identificacion) {
         this.nombreUsuario = nombreUsuario;
         this.correo = correo;
         this.nombreCompleto = nombreCompleto;
+        this.identificacion = identificacion;
         this.contrasena = contrasena;
         this.activo = true;
     }
@@ -42,6 +45,7 @@ public class Usuario extends EntidadBase {
         this.correo = usuarioDTO.getCorreo();
         this.nombreCompleto = usuarioDTO.getNombreCompleto();
         this.contrasena = usuarioDTO.getContrasena();
+        this.identificacion = usuarioDTO.getIdentificacion();
         this.activo = usuarioDTO.isActivo();
         this.roles = usuarioDTO.getRoles().stream()
                 .map(rol -> new RolUsuario(rol, this))

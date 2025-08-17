@@ -220,7 +220,7 @@ public class ArchivoControlador {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> size,
             @RequestParam(required = false) EstadoArticulo estado,
-            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) long idUsuario,
             @RequestParam(required = false) TipoRelacion tipoRelacion,
             @RequestParam(required = false) String grupoActivo,
             @RequestParam(required = false) String nombre,
@@ -229,20 +229,20 @@ public class ArchivoControlador {
             @RequestParam(required = false) String seccion) {
 
         return archivoService.generarPreliminarInventario(page,size,
-                        estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+                        estado, idUsuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
     }
 
     @PostMapping("/reporte-inventario")
     public ResponseEntity<byte[]>  reporterInventario(
             @RequestParam(required = false) EstadoArticulo estado,
-            @RequestParam(required = false) String usuario,
+            @RequestParam(required = false) long idUsuario,
             @RequestParam(required = false) TipoRelacion tipoRelacion,
             @RequestParam(required = false) String grupoActivo,
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) String marca,
             @RequestParam(required = false) String edificio,
             @RequestParam(required = false) String seccion) {
-        ByteArrayOutputStream outputStream = archivoService.generarReporteInventario(estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
+        ByteArrayOutputStream outputStream = archivoService.generarReporteInventario(estado, idUsuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "attachment; filename=reporte_articulos.xlsx");
         headers.add("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");

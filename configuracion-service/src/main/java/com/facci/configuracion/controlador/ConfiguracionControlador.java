@@ -58,4 +58,9 @@ public class ConfiguracionControlador {
         var area = areaService.consultarArea(id);
         return ResponseEntity.ok(area);
     }
+    @GetMapping("/identificacionUsuario/{identificacionUsuario}")
+    public ResponseEntity<UsuarioDTO> buscarPorIdentificacionUsuario(@PathVariable("identificacionUsuario") String identificacionUsuario) {
+        var usuario = usuarioService.listarPorIdentificacionUsuario(identificacionUsuario);
+        return ResponseEntity.ok(usuario);
+    }
 }

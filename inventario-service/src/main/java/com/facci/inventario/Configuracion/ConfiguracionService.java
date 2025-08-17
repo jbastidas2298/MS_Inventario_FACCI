@@ -111,6 +111,25 @@ public class ConfiguracionService {
         return response.getBody();
     }
 
+    public UsuarioDTO buscarPorIdentificacion(String identificacionUsuario) {
+        String url = configuracionServiceUrl + "/configuraciones/identificacionUsuario/" + identificacionUsuario;
+        String token = obtenerTokenActual().orElseThrow(() -> new RuntimeException("No se encontró un token en la sesión actual"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<UsuarioDTO> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                UsuarioDTO.class
+        );
+
+        return response.getBody();
+    }
+
     public Optional<String> obtenerTokenActual() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

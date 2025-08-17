@@ -26,13 +26,16 @@ public class UsuarioDTO {
 
     private String nombreCompleto;
 
+    private String identificacion;
+
     private List<EnumRolUsuario> roles = new ArrayList<>();
 
     public UsuarioDTO(String nombreCompleto, String nombreUsuario, String correo, String contrasena, boolean estado,
-                      EnumRolUsuario enumRolUsuario) {
+                      EnumRolUsuario enumRolUsuario, String identificacion) {
         this.nombreUsuario = nombreUsuario;
         this.correo = correo;
         this.nombreCompleto = nombreCompleto;
+        this.identificacion = identificacion;
         this.contrasena = contrasena;
         this.activo = estado;
         this.roles.add(enumRolUsuario);

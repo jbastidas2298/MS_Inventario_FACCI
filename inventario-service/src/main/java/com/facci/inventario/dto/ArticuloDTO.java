@@ -25,4 +25,5 @@ public class ArticuloDTO {
     private String ubicacion;
     private String seccion;
     private String grupoActivo;
+    private String identificacionAsignar;
 }

@@ -17,6 +17,7 @@ public class UsuarioMapper {
                 .nombreCompleto(valor.getNombreCompleto())
                 .correo(valor.getCorreo())
                 .activo(valor.isActivo())
+                .identificacion(valor.getIdentificacion())
                 .roles(valor.getRoles().stream()
                         .map(RolUsuario::getRolUsuario)
                         .collect(Collectors.toList()))

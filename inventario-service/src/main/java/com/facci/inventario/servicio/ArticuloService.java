@@ -55,7 +55,7 @@ public class ArticuloService {
         this.grupoActivoRepositorio = grupoActivoRepositorio;
     }
 
-
+    @Transactional
     public ArticuloDTO registrar(ArticuloDTO dto, boolean excel) {
         log.info("Registrando nuevo artículo: {}", dto.getNombre());
         try {
@@ -180,6 +180,15 @@ public class ArticuloService {
         if(articuloDTO.isAsignarseArticulo()){
             log.info("Asignando artículo a usuario: {}", usuario.getNombreCompleto());
             articuloAsignacionService.asignarArticulos(usuario.getId(), TipoRelacion.USUARIO, Collections.singletonList(articulo.getId()));
+        }else if (!articuloDTO.getIdentificacionAsignar().isEmpty()){
+            var usuarioAsignar = configuracionService.buscarPorIdentificacion(articuloDTO.getIdentificacionAsignar());
+            if (usuarioAsignar == null) {
+                log.error("No se encontró un usuario con la identificación: {}", articuloDTO.getIdentificacionAsignar());
+                throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
+            }else {
+                log.info("Asignando artículo a usuario: {}", usuarioAsignar.getNombreCompleto());
+                articuloAsignacionService.asignarArticulos(usuarioAsignar.getId(), TipoRelacion.USUARIO, Collections.singletonList(articulo.getId()));
+            }
         }
     }
 

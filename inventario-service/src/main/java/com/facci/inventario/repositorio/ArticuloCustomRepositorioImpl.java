@@ -81,7 +81,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
     }
 
     public List<ArticuloAsignacionDTO> obtenerAsignacionesFiltrosCompletos(
-            String filtroUsuario,
+            long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,
@@ -94,7 +94,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
         StoredProcedureQuery query = entityManager.createStoredProcedureQuery(
                 "JB_INV_Obtener_asignaciones_con_detalles_completo");
 
-        query.registerStoredProcedureParameter("filtro_usuario", String.class, ParameterMode.IN);
+        query.registerStoredProcedureParameter("filtro_usuario", long.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("estado", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("grupo_activo", String.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("nombre", String.class, ParameterMode.IN);
@@ -104,7 +104,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
         query.registerStoredProcedureParameter("offset", Integer.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("limit", Integer.class, ParameterMode.IN);
 
-        query.setParameter("filtro_usuario", StringUtils.isBlank(filtroUsuario) ? null : filtroUsuario);
+        query.setParameter("filtro_usuario", filtroUsuario > 0 ? filtroUsuario: null);
         query.setParameter("estado", estado == null ? null : estado.name());
         query.setParameter("grupo_activo", StringUtils.isBlank(grupoActivo) ? null : grupoActivo);
         query.setParameter("nombre", StringUtils.isBlank(nombre) ? null : nombre);
@@ -142,7 +142,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
     }
 
     public long contarAsignacionesFiltros(
-            String filtroUsuario,
+            long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,
@@ -156,8 +156,8 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
                         "LEFT JOIN facci_inventario..articulo_asignacion aa ON a.id = aa.articulo_id " +
                         "LEFT JOIN facci_configuracion..usuario u ON aa.id_usuario = u.id AND aa.tipo_relacion = 'USUARIO' " +
                         "LEFT JOIN facci_configuracion..area ar ON aa.id_usuario = ar.id AND aa.tipo_relacion = 'AREA' " +
-                        "WHERE (?1 IS NULL OR (aa.tipo_relacion = 'USUARIO' AND u.nombre_completo LIKE CONCAT('%', ?1, '%')) " +
-                        "OR (aa.tipo_relacion = 'AREA' AND ar.nombre_area LIKE CONCAT('%', ?1, '%'))) " +
+                        "WHERE ((?1 IS NULL OR (aa.tipo_relacion = 'USUARIO' AND u.id  = ?1)) " +
+                        "OR (aa.tipo_relacion = 'AREA' AND ar.id  = ?1)) " +
                         "AND (?2 IS NULL OR a.estado = ?2) " +
                         "AND (?3 IS NULL OR a.grupo_activo_id = ?3) " +
                         "AND (?4 IS NULL OR a.nombre LIKE CONCAT('%', ?4, '%')) " +
@@ -165,7 +165,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
                         "AND (?6 IS NULL OR a.ubicacion LIKE CONCAT('%', ?6, '%')) " +
                         "AND (?7 IS NULL OR a.seccion = ?7)";
         return ((Number) entityManager.createNativeQuery(sql)
-                .setParameter(1, StringUtils.isBlank(filtroUsuario) ? null : filtroUsuario)
+                .setParameter(1, filtroUsuario > 0 ? filtroUsuario: null)
                 .setParameter(2, estado == null ? null : estado.name())
                 .setParameter(3, StringUtils.isBlank(grupoActivo) ? null : grupoActivo)
                 .setParameter(4, StringUtils.isBlank(nombre) ? null : nombre)

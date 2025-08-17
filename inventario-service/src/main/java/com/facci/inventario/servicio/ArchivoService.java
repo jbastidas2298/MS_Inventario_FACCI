@@ -75,6 +75,8 @@ public class ArchivoService {
     private final ArticuloService articuloService;
     private final GrupoActivoRepositorio grupoActivoRepositorio;
     private final ArticuloCustomRepositorio articuloCustomRepositorio;
+    private final DataFormatter formatter = new DataFormatter();
+
     public ArchivoService(ArticuloArchivoRepositorio articuloArchivoRepositorio, ArticuloRepositorio articuloRepositorio, UsuarioSesionService usuarioSesionService, ArticuloMapper articuloMapper, ArticuloHistorialRepositorio articuloHistorialRepositorio, ArticuloAsignacionRepositorio articuloAsignacionRepositorio, ConfiguracionService configuracionService, ArticuloService articuloService, GrupoActivoRepositorio grupoActivoRepositorio, ArticuloCustomRepositorio articuloCustomRepositorio) {
         this.articuloArchivoRepositorio = articuloArchivoRepositorio;
         this.articuloRepositorio = articuloRepositorio;
@@ -558,7 +560,7 @@ public class ArchivoService {
                 if (nombreArticulo == null || nombreArticulo.isEmpty()) continue;
                 articuloDTO.setUbicacion(getCellValueAsString(row.getCell(0)));
                 articuloDTO.setSeccion(getCellValueAsString(row.getCell(1)));
-                String grupoActivoValue = getCellValueAsString(row.getCell(2)).toUpperCase().replace(" ", "_");
+                String grupoActivoValue = getCellValueAsString(row.getCell(2));
                 GrupoActivo grupoActivo = grupoActivoRepositorio.findByCodigo(grupoActivoValue)
                         .orElseThrow(() -> new CustomException(EnumCodigos.GRUPO_ACTIVO_NO_ENCONTRADO));
 
@@ -580,7 +582,7 @@ public class ArchivoService {
                         articuloDTO.setEstado(EstadoArticulo.DISPONIBLE);
                         break;
                 }
-
+                articuloDTO.setIdentificacionAsignar(getCellValueAsString(row.getCell(8)));
                 articuloDTO.setObservacion("Archivo Excel");
                 articuloService.registrar(articuloDTO,true);
                 articuloDTOS.add(articuloDTO);
@@ -596,24 +598,7 @@ public class ArchivoService {
         if (cell == null) {
             return "";
         }
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue().trim();
-            case NUMERIC:
-                if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue().toString();
-                } else {
-                    return String.valueOf((int) cell.getNumericCellValue());
-                }
-            case BOOLEAN:
-                return String.valueOf(cell.getBooleanCellValue());
-            case FORMULA:
-                return cell.getCellFormula();
-            case BLANK:
-                return "";
-            default:
-                throw new IllegalArgumentException("Tipo de celda no soportado: " + cell.getCellType());
-        }
+        return formatter.formatCellValue(cell).trim();
     }
 
     public ByteArrayOutputStream generarReporteExcel(){
@@ -834,12 +819,12 @@ public class ArchivoService {
         return outputStream;
     }
 
-    public Page<ArticuloAsignacionDTO> generarPreliminarInventario(Optional<Integer> page,Optional<Integer> size,EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public Page<ArticuloAsignacionDTO> generarPreliminarInventario(Optional<Integer> page,Optional<Integer> size,EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
         log.info("Generando reporte preliminar Excel");
         return obtenerDetallesReporteFiltros(page,size ,estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
     }
 
-    public Page<ArticuloAsignacionDTO> obtenerDetallesReporteFiltros(Optional<Integer> page, Optional<Integer> size, EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion, String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public Page<ArticuloAsignacionDTO> obtenerDetallesReporteFiltros(Optional<Integer> page, Optional<Integer> size, EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion, String grupoActivo, String nombre, String marca, String edificio, String seccion) {
         log.info("Obteniendo detalles para reporte con filtros: estado={}, usuario={}, tipoRelacion={}, grupoActivo={}, nombre={}, marca={}, edificio={}, seccion={}",
                 estado, usuario, tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
 
@@ -855,7 +840,7 @@ public class ArchivoService {
         return new PageImpl<>(contenido, pageable, totalElementos);
     }
 
-    public ByteArrayOutputStream generarReporteInventario(EstadoArticulo estado, String usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public ByteArrayOutputStream generarReporteInventario(EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
             log.info("Generando reporte Excel");
             List<ArticuloAsignacionDTO> datos = articuloCustomRepositorio.obtenerAsignacionesFiltrosCompletos(
                     usuario, estado, grupoActivo, nombre, marca, edificio, seccion,

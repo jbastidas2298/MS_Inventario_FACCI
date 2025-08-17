@@ -65,8 +65,8 @@ public class UsuarioService {
 
     public ResponseEntity<?> registrar(UsuarioDTO usuarioDTO) {
         String contraseña = usuarioDTO.getContrasena();
-        var usuarioOp = this.usuarioRepositorio.findByNombreUsuario(usuarioDTO.getNombreUsuario());
-        if (usuarioOp.isPresent()) {
+        var usuarioOp = this.usuarioRepositorio.findByNombreUsuarioOrIdentificacion(usuarioDTO.getNombreUsuario(), usuarioDTO.getIdentificacion());
+        if (!usuarioOp.isEmpty()) {
             log.error("Ya se encuentra registrado el usuario: {}", usuarioDTO.getNombreUsuario());
             throw new CustomException(EnumCodigos.USUARIO_YA_EXISTE);
 
@@ -83,17 +83,28 @@ public class UsuarioService {
     @Transactional
     public ResponseEntity<?> actualizar(UsuarioDTO usuarioDto) {
         String clave = usuarioDto.getContrasena();
+        var usuarioRe = this.usuarioRepositorio.findByNombreUsuarioOrIdentificacion(usuarioDto.getNombreUsuario(), usuarioDto.getIdentificacion());
         var usuarioOp = this.usuarioRepositorio.findById(usuarioDto.getId());
         if (usuarioOp.isEmpty()) {
             log.error("Usuario no encontrado con id: {}", usuarioDto.getId());
             throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
+        }else if (!usuarioRe.isEmpty()) {
+            usuarioRe.stream()
+                    .filter(usuario -> !usuario.equals(usuarioOp.get()))
+                    .findFirst()
+                    .ifPresent(usuario -> {
+                        log.error("Ya se encuentra registrado el usuario: {}", usuarioDto.getNombreUsuario());
+                        throw new CustomException(EnumCodigos.USUARIO_YA_EXISTE);
+                    });
         }
+
         var usuarioRecargado = usuarioOp.get();
         try {
             usuarioRecargado.setNombreUsuario(usuarioDto.getNombreUsuario());
             usuarioRecargado.setActivo(usuarioDto.isActivo());
             usuarioRecargado.setCorreo(usuarioDto.getCorreo());
             usuarioRecargado.setNombreCompleto(usuarioDto.getNombreCompleto());
+            usuarioRecargado.setIdentificacion(usuarioDto.getIdentificacion());
             if(!usuarioDto.getContrasena().isEmpty()){
                 String encryptedPassword = passwordEncoder.encode(clave);
                 usuarioRecargado.setContrasena(encryptedPassword);
@@ -293,7 +304,8 @@ public class UsuarioService {
                                 correo,
                                 contrasena,
                                 false,
-                                EnumRolUsuario.DOCENTE
+                                EnumRolUsuario.DOCENTE,
+                                nombreUsuario
                         );
                         registrarUsuario(usuarioDTO);
                         usuarioDTOS.add(usuarioDTO);
@@ -383,5 +395,15 @@ public class UsuarioService {
             log.error("Error al actualizar la clave del usuario con id: " + idUsuario, e);
             throw new CustomException(EnumCodigos.ERROR_RESTABLECER_CLAVE);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioDTO listarPorIdentificacionUsuario(String identificacionUsuario) {
+        var usuarioOp = this.usuarioRepositorio.findByIdentificacion(identificacionUsuario);
+        if (usuarioOp.isEmpty()) {
+            throw new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
+        }
+        var usuario = this.usuarioMapper.mapToDto(usuarioOp.get());
+        return usuario;
     }
 }
