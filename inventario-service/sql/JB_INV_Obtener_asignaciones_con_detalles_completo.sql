@@ -1,11 +1,11 @@
 USE [facci_inventario]
 GO
-/****** Object:  StoredProcedure [dbo].[JB_INV_Obtener_asignaciones_con_detalles_completo]    Script Date: 05/03/25 23:19:06 ******/
+/****** Object:  StoredProcedure [dbo].[JB_INV_Obtener_asignaciones_con_detalles_completo]    Script Date: 08/18/25 16:54:40 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE or ALTER PROCEDURE [dbo].[JB_INV_Obtener_asignaciones_con_detalles_completo]
+ALTER   PROCEDURE [dbo].[JB_INV_Obtener_asignaciones_con_detalles_completo]
     @filtro_usuario NVARCHAR(255) = NULL,
     @estado NVARCHAR(50) = NULL,
     @grupo_activo NVARCHAR(100) = NULL,
@@ -51,8 +51,8 @@ BEGIN
         facci_inventario..grupo_activo ga ON a.grupo_activo_id = ga.id
     WHERE 
         (NULLIF(@filtro_usuario, '') IS NULL 
-         OR (aa.tipo_relacion = 'USUARIO' AND u.nombre_completo LIKE '%' + @filtro_usuario + '%')
-         OR (aa.tipo_relacion = 'AREA' AND ar.nombre_area LIKE '%' + @filtro_usuario + '%'))
+         OR (aa.tipo_relacion = 'USUARIO' AND u.id = @filtro_usuario)
+         OR (aa.tipo_relacion = 'AREA' AND ar.id= @filtro_usuario))
         AND
         (NULLIF(@estado, '') IS NULL OR a.estado = @estado)
         AND
