@@ -183,7 +183,7 @@ public class ArticuloAsignacionService {
     public ArticuloAsignacionDTO consultarArticuloAsignacion(String codigo) {
         log.info("Consultando artículo asignado con código: {}", codigo);
         var articulo = articuloRepositorio.findByCodigoOrigen(codigo);
-        if (articulo == null) {
+        if (articulo == null || articulo.isEmpty()) {
             log.info("No se encontró el artículo con código interno: {}", codigo);
             throw new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO);
         }
