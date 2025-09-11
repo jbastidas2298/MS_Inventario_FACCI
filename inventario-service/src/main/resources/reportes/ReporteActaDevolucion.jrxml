@@ -1,0 +1,76 @@
+<!-- Created with Jaspersoft Studio version 7.0.1.final using JasperReports Library version 7.0.1-573496633c2b4074e32f433154b543003f7d2498  -->
+<jasperReport name="reporte_historial" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="195c7c70-4627-4952-bff5-3f60e7721881">
+	<field name="codigoBarra" class="java.io.InputStream"/>
+	<field name="codigoOrigen" class="java.lang.String"/>
+	<field name="codigoInterno" class="java.lang.String"/>
+	<field name="usuarioAsignado" class="java.lang.String"/>
+	<field name="nombreArticulo" class="java.lang.String"/>
+	<field name="logo" class="java.io.InputStream"/>
+	<field name="usuarioEntrega" class="java.lang.String"/>
+	<title height="110">
+		<element kind="staticText" uuid="37d1ae9c-1273-461b-8927-d7ab7291b306" x="86" y="10" width="440" height="44" fontSize="16.0" bold="true" hTextAlign="Center">
+			<text><![CDATA[UNIVERSIDAD LAICA ELOY ALFARO DE MANABÍ 
+FACULTAD DE CIENCIAS DE LA VIDA Y TECNOLOGÍAS]]></text>
+		</element>
+		<element kind="image" uuid="1bcec75a-310b-4b42-ac78-adbeddc226a9" stretchType="NoStretch" mode="Transparent" x="10" y="-10" width="70" height="65" scaleImage="RetainShape">
+			<expression><![CDATA[$F{logo}]]></expression>
+		</element>
+		<element kind="staticText" uuid="d9042e93-cd85-47db-9dc1-b98e943504ca" mode="Opaque" x="3" y="72" width="550" height="30" forecolor="#FFFFFF" backcolor="#30B86B" fontSize="11.0" bold="true" hTextAlign="Center" vTextAlign="Middle">
+			<text><![CDATA[ACTA DE DEVOLUCIÓN DE ARTÍCULO]]></text>
+		</element>
+	</title>
+	<detail>
+		<band height="470">
+			<element kind="staticText" uuid="97cc12c8-ff03-4d35-8462-566267ea13b3" mode="Opaque" x="3" y="4" width="207" height="30" forecolor="#FFFFFF" backcolor="#30B86B" fontSize="11.0" bold="true" vTextAlign="Middle">
+				<text><![CDATA[DATOS DEL ARTÍCULO DEVUELTO]]></text>
+			</element>
+			<element kind="image" uuid="361e2377-122e-4ba7-b992-c6096c97b1ed" x="380" y="30" width="139" height="50">
+				<expression><![CDATA[$F{codigoBarra}]]></expression>
+			</element>
+			<element kind="textField" uuid="bd76c863-827d-4bce-a914-1b28ecf180d0" x="379" y="82" width="140" height="20" fontSize="8.0" bold="true" hTextAlign="Center">
+				<expression><![CDATA[$F{codigoInterno}]]></expression>
+			</element>
+			<element kind="staticText" uuid="46c6bb16-20b8-49a0-8fc0-8e212aae7813" x="10" y="40" width="100" height="20" bold="true">
+				<text><![CDATA[Artículo: ]]></text>
+			</element>
+			<element kind="textField" uuid="48868c1a-bc55-48c7-a019-773207e38740" x="110" y="40" width="200" height="20">
+				<expression><![CDATA[$F{nombreArticulo}]]></expression>
+			</element>
+			<element kind="staticText" uuid="47e2b7af-bb30-4f89-83a2-f5141d0f97b9" x="10" y="60" width="100" height="20" bold="true">
+				<text><![CDATA[Código Origen:]]></text>
+			</element>
+			<element kind="textField" uuid="93411152-7117-4147-8d8e-9a1669f1e3d1" x="110" y="60" width="200" height="20">
+				<expression><![CDATA[$F{codigoOrigen}]]></expression>
+			</element>
+			<element kind="staticText" uuid="77709200-2a2a-441b-ba39-f6883335f41b" x="10" y="82" width="100" height="20" bold="true">
+				<text><![CDATA[Código Interno:]]></text>
+			</element>
+			<element kind="textField" uuid="d1168cea-64de-46ee-944d-8f1cea229832" x="110" y="82" width="200" height="20">
+				<expression><![CDATA[$F{codigoInterno}]]></expression>
+			</element>
+			<element kind="textField" uuid="a7f1d42f-0b4e-45cf-a772-6eeea598dd63" x="10" y="150" width="542" height="140">
+				<expression><![CDATA["El presente documento deja constancia de que el usuario " + $F{usuarioAsignado} + 
+" devuelve a la institución el artículo descrito. \n\n" +
+"Con la firma del presente acta, el usuario deslinda su responsabilidad sobre el artículo entregado, " +
+"quedando la institución facultada para su posterior reasignación, almacenamiento o disposición. \n\n" +
+"OBSERVACIONES:\n" +
+"___________________________________________________________________________________________\n" +
+"___________________________________________________________________________________________\n" +
+"___________________________________________________________________________________________"]]></expression>
+			</element>
+			<element kind="textField" uuid="28d7a6e7-c8a9-46f3-9889-c352e53e9cf5" x="10" y="300" width="239" height="154">
+				<expression><![CDATA["Entrega/Recepción por el área responsable:\n" + 
+$F{usuarioEntrega} + "\n\n" +
+"Firma: __________________________\n\n\n" +
+"Devolución realizada por:\n" +
+$F{usuarioAsignado} + "\n\n" +
+"Firma: __________________________"]]></expression>
+			</element>
+		</band>
+	</detail>
+	<pageFooter height="40">
+		<element kind="textField" uuid="3fbd9902-4d82-4fc8-a93f-811e4fa6309a" x="3" y="5" width="100" height="30">
+			<expression><![CDATA[new Date()]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

@@ -46,6 +46,8 @@ public enum EnumCodigos {
     ERROR_USUARIO_SIN_ASIGNACIONES("EI023","El usuario no tiene asignaciones"),
     GRUPO_ACTIVO_NO_ENCONTRADO("EI024","Grupo Activo no encontrado"),
     ARCHIVO_ERROR_ELIMINAR("EI025","Error al eliminar el archivo"),
+    BODEGA_YA_EXISTE("EC017", "Ya existe un área designada como bodega."),
+    BODEGA_NO_ENCONTRADA("EC018", "No se ha encontrado un área designada como bodega.")
     ;
 
 

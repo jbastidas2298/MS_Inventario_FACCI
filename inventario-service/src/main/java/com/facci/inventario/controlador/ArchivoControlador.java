@@ -220,7 +220,7 @@ public class ArchivoControlador {
             @RequestParam Optional<Integer> page,
             @RequestParam Optional<Integer> size,
             @RequestParam(required = false) EstadoArticulo estado,
-            @RequestParam(required = false) long idUsuario,
+            @RequestParam(required = false) Long idUsuario,
             @RequestParam(required = false) TipoRelacion tipoRelacion,
             @RequestParam(required = false) String grupoActivo,
             @RequestParam(required = false) String nombre,
@@ -235,7 +235,7 @@ public class ArchivoControlador {
     @PostMapping("/reporte-inventario")
     public ResponseEntity<byte[]>  reporterInventario(
             @RequestParam(required = false) EstadoArticulo estado,
-            @RequestParam(required = false) long idUsuario,
+            @RequestParam(required = false) Long idUsuario,
             @RequestParam(required = false) TipoRelacion tipoRelacion,
             @RequestParam(required = false) String grupoActivo,
             @RequestParam(required = false) String nombre,

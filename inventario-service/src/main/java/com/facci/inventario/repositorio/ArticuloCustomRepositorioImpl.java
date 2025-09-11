@@ -81,7 +81,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
     }
 
     public List<ArticuloAsignacionDTO> obtenerAsignacionesFiltrosCompletos(
-            long filtroUsuario,
+            Long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,
@@ -104,7 +104,9 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
         query.registerStoredProcedureParameter("offset", Integer.class, ParameterMode.IN);
         query.registerStoredProcedureParameter("limit", Integer.class, ParameterMode.IN);
 
-        query.setParameter("filtro_usuario", filtroUsuario > 0 ? filtroUsuario: null);
+        query.setParameter("filtro_usuario",
+                (filtroUsuario != null && filtroUsuario > 0) ? filtroUsuario : null
+        );
         query.setParameter("estado", estado == null ? null : estado.name());
         query.setParameter("grupo_activo", StringUtils.isBlank(grupoActivo) ? null : grupoActivo);
         query.setParameter("nombre", StringUtils.isBlank(nombre) ? null : nombre);
@@ -142,7 +144,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
     }
 
     public long contarAsignacionesFiltros(
-            long filtroUsuario,
+            Long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,
@@ -165,7 +167,7 @@ public class ArticuloCustomRepositorioImpl implements ArticuloCustomRepositorio 
                         "AND (?6 IS NULL OR a.ubicacion LIKE CONCAT('%', ?6, '%')) " +
                         "AND (?7 IS NULL OR a.seccion = ?7)";
         return ((Number) entityManager.createNativeQuery(sql)
-                .setParameter(1, filtroUsuario > 0 ? filtroUsuario: null)
+                .setParameter(1, (filtroUsuario != null && filtroUsuario > 0) ? filtroUsuario : null)
                 .setParameter(2, estado == null ? null : estado.name())
                 .setParameter(3, StringUtils.isBlank(grupoActivo) ? null : grupoActivo)
                 .setParameter(4, StringUtils.isBlank(nombre) ? null : nombre)

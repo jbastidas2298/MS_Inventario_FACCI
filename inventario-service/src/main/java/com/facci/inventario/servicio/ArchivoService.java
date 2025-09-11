@@ -7,13 +7,11 @@ import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.enums.TipoRelacion;
 import com.facci.comun.handler.CustomException;
 import com.facci.inventario.Configuracion.ConfiguracionService;
-import com.facci.inventario.dominio.Articulo;
-import com.facci.inventario.dominio.ArticuloArchivo;
-import com.facci.inventario.dominio.ArticuloAsignacion;
-import com.facci.inventario.dominio.GrupoActivo;
+import com.facci.inventario.dominio.*;
 import com.facci.inventario.dto.*;
 import com.facci.inventario.enums.EstadoArticulo;
 import com.facci.inventario.enums.TipoArchivo;
+import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.map.ArticuloMapper;
 import com.facci.inventario.repositorio.*;
 import com.google.zxing.BarcodeFormat;
@@ -819,12 +817,12 @@ public class ArchivoService {
         return outputStream;
     }
 
-    public Page<ArticuloAsignacionDTO> generarPreliminarInventario(Optional<Integer> page,Optional<Integer> size,EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public Page<ArticuloAsignacionDTO> generarPreliminarInventario(Optional<Integer> page,Optional<Integer> size,EstadoArticulo estado, Long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
         log.info("Generando reporte preliminar Excel");
         return obtenerDetallesReporteFiltros(page,size ,estado, usuario,tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
     }
 
-    public Page<ArticuloAsignacionDTO> obtenerDetallesReporteFiltros(Optional<Integer> page, Optional<Integer> size, EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion, String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public Page<ArticuloAsignacionDTO> obtenerDetallesReporteFiltros(Optional<Integer> page, Optional<Integer> size, EstadoArticulo estado, Long usuario, TipoRelacion tipoRelacion, String grupoActivo, String nombre, String marca, String edificio, String seccion) {
         log.info("Obteniendo detalles para reporte con filtros: estado={}, usuario={}, tipoRelacion={}, grupoActivo={}, nombre={}, marca={}, edificio={}, seccion={}",
                 estado, usuario, tipoRelacion, grupoActivo, nombre, marca, edificio, seccion);
 
@@ -840,7 +838,7 @@ public class ArchivoService {
         return new PageImpl<>(contenido, pageable, totalElementos);
     }
 
-    public ByteArrayOutputStream generarReporteInventario(EstadoArticulo estado, long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
+    public ByteArrayOutputStream generarReporteInventario(EstadoArticulo estado, Long usuario, TipoRelacion tipoRelacion,String grupoActivo, String nombre, String marca, String edificio, String seccion) {
             log.info("Generando reporte Excel");
             List<ArticuloAsignacionDTO> datos = articuloCustomRepositorio.obtenerAsignacionesFiltrosCompletos(
                     usuario, estado, grupoActivo, nombre, marca, edificio, seccion,
@@ -850,4 +848,97 @@ public class ArchivoService {
             return generarExcel(datos);
 
     }
+
+    public byte[] generarReporteActaDevolucion(Long articuloId, ArticuloAsignacion articuloAsignacion) {
+        ArticuloDetalleDTO detalleDTO = articuloService.obtenerArticuloDetalleDevolucion(articuloId,articuloAsignacion);
+        InputStream logoStream = obtenerLogoStream();
+        InputStream codigoBarraStream = generarCodigoBarraReporte(articuloId);
+
+        List<Map<String, Object>> datos = crearDatosPrincipalesActaEntrega(detalleDTO, logoStream, codigoBarraStream);
+
+        Map<String, Object> parameters = new HashMap<>();
+
+
+        return generarPDFReporte("/reportes/ReporteActaDevolucion.jasper", parameters, datos);
+    }
+
+    @Transactional
+    public byte[] eliminarAsignacionesPorArticulo(Long idArticulo) {
+        log.info("Eliminando asignaciones para el artículo con ID: {}", idArticulo);
+
+        var asignacion = articuloAsignacionRepositorio.findByArticuloId(idArticulo);
+        if (asignacion.isEmpty()) {
+            log.info("No se encontraron asignaciones para el artículo con ID: {}", idArticulo);
+            throw new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS);
+        }
+
+        ArticuloAsignacion asignacionAnterior = asignacion.get();
+        var reporteDevolcucion = this.generarReporteActaDevolucion(idArticulo,asignacionAnterior);
+        ArticuloAsignacion asignacionExistente = asignacion.get();
+        this.registrarEvento(
+                asignacionExistente.getArticulo(),
+                TipoOperacion.DEVOLUCION,
+                "Devolución del artículo",
+                usuarioSesionService.usuarioCompleto()
+        );
+
+        var areaBodega = configuracionService.consultarAreaBodega();
+        if (areaBodega != null && areaBodega.getId() > 0) {
+            log.info("Reutilizando asignación del artículo {} para enviarlo a bodega con ID: {}",
+                    idArticulo, areaBodega.getId());
+            asignacionExistente.setIdUsuario(areaBodega.getId());
+            asignacionExistente.setTipoRelacion(TipoRelacion.AREA);
+            articuloAsignacionRepositorio.save(asignacionExistente);
+            this.registrarEvento(
+                    asignacionExistente.getArticulo(),
+                    TipoOperacion.REASIGNACION,
+                    "Asignación a bodega",
+                    usuarioSesionService.usuarioCompleto()
+            );
+        } else {
+            log.warn("No existe un área designada como bodega. El artículo con ID {} queda sin asignación.",
+                    idArticulo);
+            var usuarioSesion = usuarioSesionService.usuarioCompleto();
+            asignacionExistente.setIdUsuario(usuarioSesion.getId());
+            asignacionExistente.setTipoRelacion(TipoRelacion.USUARIO);
+            articuloAsignacionRepositorio.save(asignacionExistente);
+            this.registrarEvento(
+                    asignacionExistente.getArticulo(),
+                    TipoOperacion.REASIGNACION,
+                    "Asignación a usuario administrador por falta de bodega",
+                    usuarioSesionService.usuarioCompleto()
+            );
+        }
+        return reporteDevolcucion;
+    }
+
+    public void registrarEvento(Articulo articulo, TipoOperacion tipoOperacion, String descripcion, UsuarioDTO usuarioDTO) {
+        String descripcionFinal = Optional.ofNullable(descripcion)
+                .filter(desc -> !desc.isEmpty())
+                .orElseGet(() -> generarDescripcion(tipoOperacion, articulo, usuarioDTO));
+
+        log.info("Registrando evento para artículo con ID {} y operación {}", articulo.getId(), tipoOperacion);
+
+        ArticuloHistorial historial = ArticuloHistorial.builder()
+                .articulo(articulo)
+                .codigoInterno(articulo.getCodigoInterno())
+                .tipoOperacion(tipoOperacion)
+                .descripcion(descripcionFinal)
+                .build();
+
+        articuloHistorialRepositorio.save(historial);
+    }
+
+    private String generarDescripcion(TipoOperacion tipoOperacion, Articulo articulo, UsuarioDTO usuarioDTO) {
+        log.info("Generando descripción para operación {} en artículo con ID {}", tipoOperacion, articulo.getId());
+        return switch (tipoOperacion) {
+            case INGRESO -> "Se ingresó un nuevo artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();
+            case ACTUALIZACION -> "Se actualizó el artículo con código interno: " + articulo.getCodigoInterno() + " por el usuario " + usuarioDTO.getNombreCompleto();
+            case ASIGNACION -> "Se asignó el artículo con código interno: " + articulo.getCodigoInterno() + " a " + usuarioDTO.getNombreCompleto();
+            case REASIGNACION -> "Se reasignó el artículo con código interno: " + articulo.getCodigoInterno() + " a " + usuarioDTO.getNombreCompleto();
+            case ELIMINACION -> "Se eliminó el artículo con código interno: " + articulo.getCodigoInterno();
+            default -> "Operación no especificada para el artículo con código interno: " + articulo.getCodigoInterno();
+        };
+    }
+
 }

@@ -43,7 +43,8 @@ public class SecurityConfig {
                                 "/configuracion/restablecer-contrasena/**",
                                 "/v3/api-docs/**",   // Permitir acceso a Swagger
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/configuracion/areas/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

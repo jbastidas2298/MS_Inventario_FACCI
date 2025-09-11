@@ -12,9 +12,11 @@ import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -40,6 +42,13 @@ public class AreaService {
                     log.error("Error al registrar el área. El área con nombre '{}' ya existe.", areaDTO.getNombreArea());
                     throw new CustomException(EnumCodigos.AREA_YA_EXISTE);
                 });
+        if (areaDTO.isBodega()){
+            var bodega = areaRepositorio.findByBodegaTrue();
+            if (bodega.isPresent()){
+                log.error("Error al registrar el área. Ya existe un área designada como bodega.");
+                throw new CustomException(EnumCodigos.BODEGA_YA_EXISTE);
+            }
+        }
 
         Usuario usuarioEncargado = usuarioRepositorio.findById(areaDTO.getUsuarioEncargadoId())
                 .orElseThrow(() -> {
@@ -47,7 +56,7 @@ public class AreaService {
                     return new CustomException(EnumCodigos.USUARIO_NO_ENCONTRADO);
                 });
 
-        Area nuevaArea = new Area(areaDTO.getNombreArea(), usuarioEncargado);
+        Area nuevaArea = new Area(areaDTO.getNombreArea(), usuarioEncargado, areaDTO.isBodega());
         Area areaGuardada = areaRepositorio.save(nuevaArea);
 
         log.info("Área registrada con éxito: ID={}, Nombre={}, Usuario Encargado={}",
@@ -70,6 +79,15 @@ public class AreaService {
                     log.error("Error al actualizar. Área no encontrada con ID: {}", areaDTO.getId());
                     return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
+        if (areaDTO.isBodega()){
+            var bodega = areaRepositorio.findByBodegaTrue();
+            if (bodega.isPresent()){
+                if (bodega.get().getId() != areaExistente.getId()) {
+                    log.error("Error al registrar el área. Ya existe un área designada como bodega.");
+                    throw new CustomException(EnumCodigos.BODEGA_YA_EXISTE);
+                }
+            }
+        }
         areaExistente.setNombreArea(areaDTO.getNombreArea());
         Usuario usuarioEncargado = usuarioRepositorio.findById(areaDTO.getUsuarioEncargadoId())
                 .orElseThrow(() -> {
@@ -78,6 +96,7 @@ public class AreaService {
                 });
 
         areaExistente.setUsuarioEncargado(usuarioEncargado);
+        areaExistente.setBodega(areaDTO.isBodega());
         Area areaActualizada = areaRepositorio.save(areaExistente);
 
         log.info("Área actualizada con éxito: ID={}, Nombre={}, Usuario Encargado={}",
@@ -126,7 +145,20 @@ public class AreaService {
                     log.error("Error al consultar. Área no encontrada con ID: {}", id);
                     return new CustomException(EnumCodigos.AREA_NO_ENCONTRADA);
                 });
-        log.info("Área consultada con éxito: {}", area);
+        log.info("Área consultada con éxito: {}", area.getNombreArea());
         return new AreaDTO(area);
+    }
+
+    public AreaDTO consultarAreaBodega() {
+        log.info("Intentando consultar el área designada como bodega.");
+        Optional<Area> area = areaRepositorio.findByBodegaTrue();
+        if (!area.isPresent()){
+            log.error("Error al consultar. No existe un área designada como bodega.");
+            return null;
+        }else{
+            Area areaEntity = area.get();
+            log.info("Área consultada con éxito: id={}, nombre={}", areaEntity.getId(), areaEntity.getNombreArea());
+            return new AreaDTO(areaEntity);
+        }
     }
 }

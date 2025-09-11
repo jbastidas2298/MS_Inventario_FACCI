@@ -59,7 +59,7 @@ public class ArticuloService {
     public ArticuloDTO registrar(ArticuloDTO dto, boolean excel) {
         log.info("Registrando nuevo artículo: {}", dto.getNombre());
         try {
-            if(dto.getCodigoOrigen() != null){
+            if(dto.getCodigoOrigen() != null && !dto.getCodigoOrigen().isEmpty()){
                 verificarArticuloExistente(dto.getCodigoOrigen());
             }
 
@@ -73,7 +73,10 @@ public class ArticuloService {
 
             log.debug("Artículo registrado: {}", articuloGuardado.getNombre());
             return articuloMapper.mapToDto(articuloGuardado);
-        }catch (Exception e){
+        }catch (CustomException ce) {
+            throw ce;
+        } catch (Exception e) {
+            log.error("Error inesperado al registrar el artículo", e);
             throw new CustomException(EnumCodigos.ARTICULO_ERROR_REGISTRAR);
         }
     }
@@ -116,14 +119,17 @@ public class ArticuloService {
 
         if (roles.contains(EnumRolUsuario.ADMINISTRADOR)) {
             Page<Articulo> articulosPaginados = articuloRepositorio
-                    .findByEstadoAndNombreContainingIgnoreCaseOrEstadoAndCodigoOrigenContainingIgnoreCase(estado,filterValue, estado,filterValue, pageable);
+                    .buscarArticulos(estado,normalizar(filterValue), pageable);
             log.info("Artículos consultados (ADMINISTRADOR): {}", articulosPaginados.getTotalElements());
             return articulosPaginados.map(articuloMapper::mapToDto);
         } else {
             List<Long> idsAsignadosUsuario = articuloAsignacionService.obtenerIdsArticulosAsignadosAlUsuario();
-            Page<Articulo> articulosPaginados = articuloRepositorio
-                    .findByEstadoAndIdInAndNombreContainingIgnoreCaseOrEstadoAndIdInAndCodigoOrigenContainingIgnoreCase(
-                            estado,idsAsignadosUsuario, filterValue,estado, idsAsignadosUsuario,filterValue, pageable);
+            Page<Articulo> articulosPaginados = articuloRepositorio.buscarArticulosUsuario(
+                    estado,
+                    idsAsignadosUsuario,
+                    normalizar(filterValue),
+                    pageable
+            );
             log.info("Artículos consultados para usuario: {}", articulosPaginados.getTotalElements());
             return articulosPaginados.map(articuloMapper::mapToDto);
         }
@@ -180,6 +186,15 @@ public class ArticuloService {
         if(articuloDTO.isAsignarseArticulo()){
             log.info("Asignando artículo a usuario: {}", usuario.getNombreCompleto());
             articuloAsignacionService.asignarArticulos(usuario.getId(), TipoRelacion.USUARIO, Collections.singletonList(articulo.getId()));
+        }else if(articuloDTO.isAsignarBodega()){
+            var areaBodega = configuracionService.consultarAreaBodega();
+            if (areaBodega == null) {
+                log.error("No se encontró un área designada como bodega.");
+                throw new CustomException(EnumCodigos.BODEGA_NO_ENCONTRADA);
+            }else{
+                log.info("Asignando artículo a área bodega: {}", areaBodega.getNombreArea());
+                articuloAsignacionService.asignarArticulos(areaBodega.getId(), TipoRelacion.AREA, Collections.singletonList(articulo.getId()));
+            }
         }else if (!articuloDTO.getIdentificacionAsignar().isEmpty()){
             var usuarioAsignar = configuracionService.buscarPorIdentificacion(articuloDTO.getIdentificacionAsignar());
             if (usuarioAsignar == null) {
@@ -257,7 +272,7 @@ public class ArticuloService {
                     ArticuloHistorialDTO historialDTO = new ArticuloHistorialDTO();
                     historialDTO.setCodigoInterno(historialEntity.getCodigoInterno());
                     historialDTO.setTipoOperacion(historialEntity.getTipoOperacion());
-                    historialDTO.setDescripcion(historialEntity.getDescripcion());
+                    historialDTO.setDescripcion("Realizado por: "+ historialEntity.getCreadoPor()+ ", Fecha: " +historialEntity.getCreadoFecha()+", Accion: " + historialEntity.getDescripcion());
                     return historialDTO;
                 }).collect(Collectors.toList());
         detalleDTO.setHistorial(historial);
@@ -274,5 +289,49 @@ public class ArticuloService {
         });
 
         return detalleDTO;
+    }
+
+    public ArticuloDetalleDTO obtenerArticuloDetalleDevolucion(Long articuloId, ArticuloAsignacion asignacion) {
+        ArticuloDetalleDTO detalleDTO = new ArticuloDetalleDTO();
+
+        Articulo articulo = articuloRepositorio.findById(articuloId)
+                .orElseThrow(() -> new CustomException(EnumCodigos.ARTICULO_NO_ENCONTRADO));
+        ArticuloDTO articuloDTO = articuloMapper.mapToDto(articulo);
+        detalleDTO.setArticulo(articuloDTO);
+
+        List<ArticuloArchivoDTO> archivos = articuloArchivoRepositorio.findByArticuloId(articuloId).stream()
+                .map(archivo -> {
+                    ArticuloArchivoDTO archivoDTO = new ArticuloArchivoDTO();
+                    archivoDTO.setId(archivo.getId());
+                    archivoDTO.setPath(archivo.getPath());
+                    archivoDTO.setTipo(archivo.getTipo());
+                    return archivoDTO;
+                }).collect(Collectors.toList());
+        detalleDTO.setArchivos(archivos);
+
+        List<ArticuloHistorialDTO> historial = articuloHistorialRepositorio.findByArticulo_Id(articuloId).stream()
+                .map(historialEntity -> {
+                    ArticuloHistorialDTO historialDTO = new ArticuloHistorialDTO();
+                    historialDTO.setCodigoInterno(historialEntity.getCodigoInterno());
+                    historialDTO.setTipoOperacion(historialEntity.getTipoOperacion());
+                    historialDTO.setDescripcion("Realizado por: " + historialEntity.getCreadoPor() + ", Fecha: " + historialEntity.getCreadoFecha() + ", Accion: " + historialEntity.getDescripcion());
+                    return historialDTO;
+                }).collect(Collectors.toList());
+        detalleDTO.setHistorial(historial);
+
+        UsuarioDTO usuarioDTO = new UsuarioDTO();
+        if (asignacion.getTipoRelacion() == TipoRelacion.USUARIO) {
+            usuarioDTO = configuracionService.consultarUsuario(asignacion.getIdUsuario());
+        } else {
+            AreaDTO areaDTO = configuracionService.consultarArea(asignacion.getIdUsuario());
+            usuarioDTO.setNombreCompleto(areaDTO.getNombreArea());
+        }
+        detalleDTO.setUsuarioAsignado(usuarioDTO);
+
+        return detalleDTO;
+    }
+
+    private String normalizar(String valor) {
+        return (valor == null || valor.trim().isEmpty()) ? null : valor;
     }
 }

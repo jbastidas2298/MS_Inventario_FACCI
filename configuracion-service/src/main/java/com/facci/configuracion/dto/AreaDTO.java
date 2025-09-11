@@ -13,6 +13,7 @@ public class AreaDTO {
     private String nombreArea;
     private Long usuarioEncargadoId;
     private String nombreUsuarioEncargado;
+    boolean bodega;
 
 
     public AreaDTO(Area area) {
@@ -20,6 +21,7 @@ public class AreaDTO {
         this.nombreArea = area.getNombreArea();
         this.nombreUsuarioEncargado = area.getUsuarioEncargado().getNombreCompleto();
         this.usuarioEncargadoId = area.getUsuarioEncargado().getId();
+        this.bodega = area.isBodega();
     }
 
 }

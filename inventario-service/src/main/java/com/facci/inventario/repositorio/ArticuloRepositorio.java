@@ -16,16 +16,50 @@ public interface ArticuloRepositorio extends BaseRepositorio<Articulo>{
     List<Articulo> findByIdIn(List<Long> ids);
     Page<Articulo> findByNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
             String nombre, String codigoInterno, Pageable pageable);
-    Page<Articulo> findByEstadoAndNombreContainingIgnoreCaseOrEstadoAndCodigoOrigenContainingIgnoreCase(
-            EstadoArticulo estado1, String nombre,
+    Page<Articulo> findByEstadoAndNombreOrCodigoInternoContainingIgnoreCaseOrEstadoAndCodigoOrigenContainingIgnoreCase(
+            EstadoArticulo estado1, String nombre,String codigoInterno,
             EstadoArticulo estado2, String codigoOrigen,
             Pageable pageable);
     Page<Articulo> findByIdInAndNombreContainingIgnoreCaseOrCodigoOrigenContainingIgnoreCase(
             List<Long> ids, String nombre, String codigoInterno, Pageable pageable);
-    Page<Articulo> findByEstadoAndIdInAndNombreContainingIgnoreCaseOrEstadoAndIdInAndCodigoOrigenContainingIgnoreCase(
-            EstadoArticulo estado1, List<Long> ids1, String nombre,
+    Page<Articulo> findByEstadoAndIdInAndNombreOrCodigoInternoContainingIgnoreCaseOrEstadoAndIdInAndCodigoOrigenContainingIgnoreCase(
+            EstadoArticulo estado1, List<Long> ids1, String nombre,String codigointerno,
             EstadoArticulo estado2, List<Long> ids2, String codigoOrigen,
             Pageable pageable);
 
     List<Articulo> findByEstadoAndModificadoFechaBetween(EstadoArticulo estado, LocalDateTime desde, LocalDateTime hasta);
+
+    @Query("""
+    SELECT a
+    FROM Articulo a
+    WHERE (:estado IS NULL OR a.estado = :estado)
+      AND (
+            :filtro IS NULL 
+         OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :filtro, '%'))
+         OR LOWER(a.codigoInterno) LIKE LOWER(CONCAT('%', :filtro, '%'))
+         OR LOWER(a.codigoOrigen) LIKE LOWER(CONCAT('%', :filtro, '%'))
+      )
+    """)
+    Page<Articulo> buscarArticulos(
+            @Param("estado") EstadoArticulo estado,
+            @Param("filtro") String filtro,
+            Pageable pageable);
+
+    @Query("""
+    SELECT a
+    FROM Articulo a
+    WHERE a.id IN :ids
+      AND (:estado IS NULL OR a.estado = :estado)
+      AND (
+            :filtro IS NULL
+         OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :filtro, '%'))
+         OR LOWER(a.codigoInterno) LIKE LOWER(CONCAT('%', :filtro, '%'))
+         OR LOWER(a.codigoOrigen) LIKE LOWER(CONCAT('%', :filtro, '%'))
+      )
+    """)
+    Page<Articulo> buscarArticulosUsuario(
+            @Param("estado") EstadoArticulo estado,
+            @Param("ids") List<Long> ids,
+            @Param("filtro") String filtro,
+            Pageable pageable);
 }

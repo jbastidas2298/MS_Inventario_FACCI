@@ -26,4 +26,5 @@ public class ArticuloDTO {
     private String seccion;
     private String grupoActivo;
     private String identificacionAsignar;
+    private boolean asignarBodega;
 }

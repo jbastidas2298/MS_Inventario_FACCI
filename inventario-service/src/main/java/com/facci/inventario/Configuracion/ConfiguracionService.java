@@ -142,7 +142,27 @@ public class ConfiguracionService {
 
     public AreaDTO consultarArea(Long id) {
         log.info("Consultando usuario a configuracion");
-        String url = configuracionServiceUrl + "/configuraciones/area/" + id;
+        String url = configuracionServiceUrl + "/configuracion/areas/" + id;
+        String token = obtenerTokenActual().orElseThrow(() -> new RuntimeException("No se encontró un token en la sesión actual"));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + token);
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<AreaDTO> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                AreaDTO.class
+        );
+
+        return response.getBody();
+    }
+
+    public AreaDTO consultarAreaBodega() {
+        log.info("Consultando usuario a configuracion");
+        String url = configuracionServiceUrl + "/configuracion/areas/area/bodega";
         String token = obtenerTokenActual().orElseThrow(() -> new RuntimeException("No se encontró un token en la sesión actual"));
 
         HttpHeaders headers = new HttpHeaders();

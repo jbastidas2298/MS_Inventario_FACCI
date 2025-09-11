@@ -1,6 +1,5 @@
 package com.facci.inventario.servicio;
 
-import com.facci.comun.dto.UsuarioAreaDTO;
 import com.facci.comun.dto.UsuarioDTO;
 import com.facci.comun.enums.EnumCodigos;
 import com.facci.comun.enums.TipoRelacion;
@@ -9,7 +8,6 @@ import com.facci.inventario.Configuracion.ConfiguracionService;
 import com.facci.inventario.dominio.Articulo;
 import com.facci.inventario.dominio.ArticuloAsignacion;
 import com.facci.inventario.dto.ArticuloAsignacionDTO;
-import com.facci.inventario.dto.ArticuloDTO;
 import com.facci.inventario.enums.TipoOperacion;
 import com.facci.inventario.repositorio.ArticuloAsignacionRepositorio;
 import com.facci.inventario.repositorio.ArticuloCustomRepositorio;
@@ -20,6 +18,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -117,21 +116,7 @@ public class ArticuloAsignacionService {
                 })
                 .collect(Collectors.toList());
     }
-    public void eliminarAsignacionesPorArticulo(Long idArticulo) {
-        log.info("Eliminando asignaciones para el artículo con ID: {}", idArticulo);
-        var asignacion = articuloAsignacionRepositorio.findByArticuloId(idArticulo);
-        if (asignacion.isEmpty()) {
-            log.info("No se encontraron asignaciones para el artículo con ID: {}", idArticulo);
-            throw new CustomException(EnumCodigos.ASIGNACIONES_NO_ENCONTRADAS);
-        }
-        articuloAsignacionRepositorio.delete(asignacion.get());
-        articuloHistorialService.registrarEvento(
-                asignacion.get().getArticulo(),
-                TipoOperacion.ELIMINACION_ASIGNACION,
-                "Asignación eliminada",
-                usuarioSesionService.usuarioCompleto()
-        );
-    }
+
 
     public List<ArticuloAsignacion> reasignarArticulos(List<Long> idsArticulos, Long idUsuarioNuevo, String descripcion) {
         log.info("Reasignando artículos con IDs: {} a usuario con ID: {}", idsArticulos, idUsuarioNuevo);

@@ -10,7 +10,7 @@ public interface ArticuloCustomRepositorio {
     List<ArticuloAsignacionDTO> obtenerAsignaciones(String filtroArticulo, String filtroUsuario, int offset, int limit);
     long contarAsignaciones(String filtroArticulo, String filtroUsuario);
     List<ArticuloAsignacionDTO> obtenerAsignacionesFiltrosCompletos(
-            long filtroUsuario,
+            Long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,
@@ -20,7 +20,7 @@ public interface ArticuloCustomRepositorio {
             int offset,
             int limit);
     long contarAsignacionesFiltros(
-            long filtroUsuario,
+            Long filtroUsuario,
             EstadoArticulo estado,
             String grupoActivo,
             String nombre,

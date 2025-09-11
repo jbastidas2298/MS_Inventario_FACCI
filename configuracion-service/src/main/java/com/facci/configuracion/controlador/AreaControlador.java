@@ -66,4 +66,10 @@ public class AreaControlador {
         return ResponseEntity.ok(area);
     }
 
+    @GetMapping("/area/bodega")
+    @Operation(summary = "Consultar área por ID", description = "Obtiene un área registrada en el sistema")
+    public ResponseEntity<AreaDTO> consultarAreaBodega() {
+        var area = areaService.consultarAreaBodega();
+        return ResponseEntity.ok(area);
+    }
 }

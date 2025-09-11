@@ -11,4 +11,5 @@ public interface AreaRepositorio extends BaseRepositorio<Area> {
 
     Optional<Area> findByNombreArea(String nombreArea);
     Optional<Area>findByUsuarioEncargado(Usuario usuarioEncargado);
+    Optional<Area> findByBodegaTrue();
 }

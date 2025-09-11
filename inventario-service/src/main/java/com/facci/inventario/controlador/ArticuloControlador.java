@@ -131,11 +131,14 @@ public class ArticuloControlador {
     }
 
     @DeleteMapping("/eliminarAsignacion/{id}")
-    @Operation(summary = "Eliminar asignación", description = "Elimina una asignación de artículo mediante su ID")
-    public ResponseEntity<String> eliminarAsignacion(@PathVariable Long id) {
-        articuloAsignacionService.eliminarAsignacionesPorArticulo(id);
-        return ResponseEntity.ok("Asignación eliminada exitosamente.");
+    public ResponseEntity<byte[]> eliminarAsignacion(@PathVariable Long id) {
+        var reporte= archivoService.eliminarAsignacionesPorArticulo(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=acta_devolucion.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(reporte);
     }
+
 
     @GetMapping("/codigo/{codigo}")
     @Operation(summary = "Consultar artículo por código", description = "Obtiene un artículo registrado en el sistema mediante su código")

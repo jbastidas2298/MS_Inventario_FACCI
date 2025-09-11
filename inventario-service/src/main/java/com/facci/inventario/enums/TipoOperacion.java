@@ -7,4 +7,5 @@ public enum TipoOperacion {
     ELIMINACION,
     REASIGNACION,
     ELIMINACION_ASIGNACION,
+    DEVOLUCION
 }
